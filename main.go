@@ -9,12 +9,14 @@ import (
 	"os/exec"
 )
 
+//used for parsing json object of changed repo
 type UpdatedRepo struct {
 	Name       string
 	Repository string
 	Tag        string
 }
 
+//reads the file from fileLocation
 func readFileFrom(fileLocation string) ([]byte, error) {
 	jsonFile, err := os.Open(fileLocation)
 	if err != nil {
@@ -32,6 +34,8 @@ func readFileFrom(fileLocation string) ([]byte, error) {
 	}
 	return byteValue, err
 }
+
+//reads the file and return json object of type UpdatedRepo
 func getAllRepo(location string) ([]UpdatedRepo, error) {
 	byteValue, err := readFileFrom(location)
 	if err != nil {
@@ -53,24 +57,16 @@ func main() {
 		os.Exit(1)
 	}
 	for key, _ := range all_files {
-		// fmt.Println(all_files[key].Name)
 
-		// fmt.Println(all_files[key].Repository)
-
-		// fmt.Println(all_files[key].Tag)
-
-		cmd := exec.Command("sh", "-c", `yq eval '.*[]| select(.name == "`+all_files[key].Name+`").image.repository |=  "`+all_files[key].Repository+
-			`" |`+`select(.name == "`+all_files[key].Name+`").image.tag |=  "`+all_files[key].Tag+`"' app.yaml`)
-		stdout, err := cmd.Output()
+		cmd := exec.Command("sh", "-c", `sudo cat temp.yaml |yq eval '(.*[]| select(.name == "`+all_files[key].Name+`").image.repository) |=  "`+all_files[key].Repository+
+			`" |`+`(.*[]|select(.name == "`+all_files[key].Name+`").image.tag) |=  "`+all_files[key].Tag+`"' -| sudo sponge temp.yaml`)
+		_, err := cmd.Output()
 		if err != nil {
 			log.Fatal(err)
 			os.Exit(1)
 
 		}
-		fmt.Print(string(stdout))
+
 	}
-	//import and check for the viper yaml
-	// vi := viper.New()
-	// vi.SetConfigFile("app.yaml")
 
 }

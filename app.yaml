@@ -1,0 +1,57 @@
+name: sample-monorepo
+
+static_sites:
+- name: frontend
+  environment_slug: html
+  github:
+    repo: digitalocean/sample-monorepo
+    branch: main
+    deploy_on_push: true
+  source_dir: frontend
+  index_document: hello.html
+  error_document: error.html
+  routes:
+  - path: /
+
+- name: landing
+  github:
+    repo: digitalocean/sample-monorepo
+    branch: main
+    deploy_on_push: true
+  source_dir: landing
+  dockerfile_path: landing/Dockerfile
+  output_dir: /app
+  error_document: error.html
+  routes:
+  - path: /landing
+
+services:
+- name: api
+  environment_slug: go
+  github:
+    repo: digitalocean/sample-monorepo
+    branch: main
+    deploy_on_push: true
+  source_dir: api
+  routes:
+  - path: /api
+
+- name: webhook
+  environment_slug: go
+  github:
+    repo: digitalocean/sample-monorepo
+    branch: main
+    deploy_on_push: true
+  source_dir: webhook
+  routes:
+  - path: /webhook
+
+workers:
+- name: worker
+  github:
+    repo: digitalocean/sample-monorepo
+    branch: main
+    deploy_on_push: true
+  source_dir: worker
+  dockerfile_path: worker/Dockerfile
+  run_command: sh -c "cat ./ok && sleep infinity"

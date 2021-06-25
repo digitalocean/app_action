@@ -4,27 +4,45 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
-
-	"github.com/spf13/viper"
+	"os/exec"
 )
 
+//used for parsing json object of changed repo
 type UpdatedRepo struct {
 	Name       string
 	Repository string
 	Tag        string
 }
 
-func getAllRepo(fileLocation string) ([]UpdatedRepo, error) {
+//reads the file from fileLocation
+func readFileFrom(fileLocation string) ([]byte, error) {
 	jsonFile, err := os.Open(fileLocation)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		os.Exit(1)
-		return nil, err
+		return []byte{}, err
 	}
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+		return []byte{}, err
+	}
+	return byteValue, err
+}
+
+//reads the file and return json object of type UpdatedRepo
+func getAllRepo(location string) ([]UpdatedRepo, error) {
+	byteValue, err := readFileFrom(location)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+		return nil, err
+	}
 	var allRepos []UpdatedRepo
 	json.Unmarshal(byteValue, &allRepos)
 	return allRepos, nil
@@ -33,20 +51,22 @@ func getAllRepo(fileLocation string) ([]UpdatedRepo, error) {
 
 func main() {
 	//import and return json object of changed repo
-	_, err := getAllRepo("../test1.json")
+	all_files, err := getAllRepo("../test1.json")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	//import and check for the viper yaml
-	vi := viper.New()
-	vi.SetConfigFile("app.yaml")
-	vi.SetConfigType("yaml")
-	err = vi.ReadInConfig()
-	if err != nil {
-		fmt.Println("Error in app spec retrieved from DO ", err)
-		os.Exit(1)
+	for key, _ := range all_files {
+
+		cmd := exec.Command("sh", "-c", `sudo cat temp.yaml |yq eval '(.*[]| select(.name == "`+all_files[key].Name+`").image.repository) |=  "`+all_files[key].Repository+
+			`" |`+`(.*[]|select(.name == "`+all_files[key].Name+`").image.tag) |=  "`+all_files[key].Tag+`"' -| sudo sponge temp.yaml`)
+		_, err := cmd.Output()
+		if err != nil {
+			log.Fatal(err)
+			os.Exit(1)
+
+		}
+
 	}
-	fmt.Println(vi.GetString("static_sites.fronted"))
 
 }

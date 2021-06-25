@@ -3,10 +3,10 @@ name: sample-monorepo
 static_sites:
 - name: frontend
   environment_slug: html
-  github:
-    repo: digitalocean/sample-monorepo
-    branch: main
-    deploy_on_push: true
+  image:
+    registry_type: DOCR
+    repository: digitalocean/sample-monorepo
+    tag: latest
   source_dir: frontend
   index_document: hello.html
   error_document: error.html
@@ -14,10 +14,10 @@ static_sites:
   - path: /
 
 - name: landing
-  github:
-    repo: digitalocean/sample-monorepo
-    branch: main
-    deploy_on_push: true
+  image:
+    registry_type: DOCR
+    repository: digitalocean/sample-monorepo
+    tag: latest
   source_dir: landing
   dockerfile_path: landing/Dockerfile
   output_dir: /app
@@ -28,10 +28,10 @@ static_sites:
 services:
 - name: api
   environment_slug: go
-  github:
-    repo: digitalocean/sample-monorepo
-    branch: main
-    deploy_on_push: true
+  image:
+    registry_type: DOCR
+    repository: digitalocean/sample-monorepo
+    tag: latest
   source_dir: api
   routes:
   - path: /api

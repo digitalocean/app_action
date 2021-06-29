@@ -1,0 +1,17 @@
+[
+  {
+    "name": "webhook",
+    "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
+    "tag": "latest"
+  },
+  {
+    "name": "landing",
+    "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
+    "tag": "test1"
+  },
+  {
+    "name": "api",
+    "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
+    "tag": "test2"
+  }
+]

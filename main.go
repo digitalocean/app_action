@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,24 +26,6 @@ func readFileFrom(fileLocation string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return byteValue, err
-}
-
-//parsing app
-func parseAppSpec(spec []byte) (*godo.AppSpec, error) {
-	jsonSpec, err := yaml.YAMLToJSON(spec)
-	if err != nil {
-		return nil, err
-	}
-
-	dec := json.NewDecoder(bytes.NewReader(jsonSpec))
-	dec.DisallowUnknownFields()
-
-	var appSpec godo.AppSpec
-	if err := dec.Decode(&appSpec); err != nil {
-		return nil, err
-	}
-
-	return &appSpec, nil
 }
 
 //reads the file and return json object of type UpdatedRepo

@@ -125,21 +125,21 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) {
 
 func main() {
 	//import and return json object of changed repo
-	input, appSpec, err := getAllRepo("test1", "temp.yaml")
+	input, appSpec, err := getAllRepo("test1", "app.yaml")
 	if err != nil {
 		fmt.Println("Error in Retrieving json data: ", err)
 		os.Exit(1)
 	}
 	execCommand(input, appSpec)
 
-	newJson, err := json.Marshal(appSpec)
+	newYaml, err := yaml.Marshal(appSpec)
 	if err != nil {
 		log.Fatal("Error in building json spec")
 		os.Exit(1)
 	}
-	err = ioutil.WriteFile("spec.json", newJson, 0644)
+	err = ioutil.WriteFile("_app.yaml", newYaml, 0644)
 	if err != nil {
-		log.Fatal("Error in writing json spec")
+		log.Fatal("Error in writing to yaml")
 		os.Exit(1)
 	}
 

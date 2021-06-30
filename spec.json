@@ -1,1 +1,33 @@
-{"name":"sample-monorepo","services":[{"name":"api","image":{"registry_type":"DOCR","repository":"registry.digitalocean.com/\u003cmy-registry\u003e/\u003cmy-image\u003e","tag":"test2"},"routes":[{"path":"/api"}]},{"name":"webhook","image":{"registry_type":"DOCR","repository":"registry.digitalocean.com/\u003cmy-registry\u003e/\u003cmy-image\u003e","tag":"latest"},"routes":[{"path":"/webhook"}]}],"workers":[{"name":"worker","github":{"repo":"digitalocean/sample-monorepo","branch":"main"}}]}
+{
+  "name": "sample-monorepo",
+  "services": [
+    {
+      "name": "api",
+      "image": {
+        "registry_type": "DOCR",
+        "repository": "registry.digitalocean.com/\u003cmy-registry\u003e/\u003cmy-image\u003e",
+        "tag": "test2"
+      },
+      "routes": [{ "path": "/api" }]
+    },
+    {
+      "name": "webhook",
+      "image": {
+        "registry_type": "DOCR",
+        "repository": "registry.digitalocean.com/\u003cmy-registry\u003e/\u003cmy-image\u003e",
+        "tag": "latest"
+      },
+      "routes": [{ "path": "/webhook" }]
+    }
+  ],
+  "static_sites": [
+    { "name": "frontend", "routes": [{ "path": "/" }] },
+    { "name": "landing", "routes": [{ "path": "/landing" }] }
+  ],
+  "workers": [
+    {
+      "name": "worker",
+      "github": { "repo": "digitalocean/sample-monorepo", "branch": "main" }
+    }
+  ]
+}

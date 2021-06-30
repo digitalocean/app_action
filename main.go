@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -8,7 +9,7 @@ import (
 	"os"
 
 	"github.com/digitalocean/godo"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 //used for parsing json object of changed repo
@@ -16,26 +17,6 @@ type UpdatedRepo struct {
 	Name       string
 	Repository string
 	Tag        string
-}
-
-type AppSpec struct {
-	// The name of the app. Must be unique across all apps in the same account.
-	Name string `json:"name"`
-	// Workloads which expose publicy-accessible HTTP services.
-	Services []*godo.AppServiceSpec `json:"services,omitempty"`
-	// Content which can be rendered to static web assets.
-	Static_sites []*godo.AppStaticSiteSpec `json:"static_sites,omitempty"`
-	// Workloads which do not expose publicly-accessible HTTP services.
-	Workers []*godo.AppWorkerSpec `json:"workers,omitempty"`
-	// Pre and post deployment workloads which do not expose publicly-accessible HTTP routes.
-	Jobs []*godo.AppJobSpec `json:"jobs,omitempty"`
-	// Database instances which can provide persistence to workloads within the application.
-	Databases []*godo.AppDatabaseSpec `json:"databases,omitempty"`
-	// A set of hostnames where the application will be available.
-	Domains []*godo.AppDomainSpec `json:"domains,omitempty"`
-	Region  string                `json:"region,omitempty"`
-	// A list of environment variables made available to all components in the app.
-	Envs []*godo.AppVariableDefinition `json:"envs,omitempty"`
 }
 
 //reads the file from fileLocation
@@ -48,36 +29,54 @@ func readFileFrom(fileLocation string) ([]byte, error) {
 	return byteValue, err
 }
 
+//parsing app
+func parseAppSpec(spec []byte) (*godo.AppSpec, error) {
+	jsonSpec, err := yaml.YAMLToJSON(spec)
+	if err != nil {
+		return nil, err
+	}
+
+	dec := json.NewDecoder(bytes.NewReader(jsonSpec))
+	dec.DisallowUnknownFields()
+
+	var appSpec godo.AppSpec
+	if err := dec.Decode(&appSpec); err != nil {
+		return nil, err
+	}
+
+	return &appSpec, nil
+}
+
 //reads the file and return json object of type UpdatedRepo
-func getAllRepo(input string, appSpec string) ([]UpdatedRepo, AppSpec, error) {
+func getAllRepo(input string, appSpec string) ([]UpdatedRepo, godo.AppSpec, error) {
 	//parsing input
 	jsonByteValue, err := readFileFrom(input)
 	if err != nil {
 		log.Fatal("Error in reading from file: ", err)
-		return nil, AppSpec{}, err
+		return nil, godo.AppSpec{}, err
 	}
 	var allRepos []UpdatedRepo
 	err = json.Unmarshal(jsonByteValue, &allRepos)
 	if err != nil {
 		log.Fatal("Error in parsing json data from file: ", err)
-		return nil, AppSpec{}, err
+		return nil, godo.AppSpec{}, err
 	}
 	//parsing yml
 	yamlByteValue, err := readFileFrom(appSpec)
 	if err != nil {
 		log.Fatal("Error in reading from file: ", err)
-		return nil, AppSpec{}, err
+		return nil, godo.AppSpec{}, err
 	}
-	var spec AppSpec
+	var spec godo.AppSpec
 	err = yaml.Unmarshal(yamlByteValue, &spec)
 	if err != nil {
-		return nil, AppSpec{}, err
+		return nil, godo.AppSpec{}, err
 	}
 	fmt.Printf("%+v\n", spec)
 	return allRepos, spec, nil
 
 }
-func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *AppSpec) {
+func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
@@ -112,7 +111,7 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *AppSpec) {
 
 }
 
-func execCommand(allFiles []UpdatedRepo, appSpec AppSpec) {
+func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) {
 	checkForGitAndDockerHub(allFiles, &appSpec)
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {

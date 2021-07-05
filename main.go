@@ -134,6 +134,19 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 
 }
 
+func uploadToDOCR(data []UpdatedRepo) error {
+
+	for k, _ := range data {
+		cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository)
+		_, err := cmd.Output()
+		if err != nil {
+			log.Fatal("Unable to upload image to docr app:", data[k].Name)
+			return err
+		}
+	}
+	return nil
+
+}
 func main() {
 	//import and return json object of changed repo
 	//authenticate
@@ -143,13 +156,14 @@ func main() {
 		log.Fatal("Unable to retrieve app:", err)
 		os.Exit(1)
 	}
-	//get AppId
+	//retrieve AppId from users deployment
 	cmd = exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve app:", err)
 		os.Exit(1)
 	}
+	//parsing incoming data from AppId
 	var arr []godo.App
 	err = json.Unmarshal(apps, &arr)
 	if err != nil {
@@ -186,6 +200,19 @@ func main() {
 		fmt.Println("Error in Retrieving json data: ", err)
 		os.Exit(1)
 	}
+	//docr registry login
+	cmd = exec.Command("sh", "-c", "doctl registry login")
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to login to digitalocean registry:", err)
+		os.Exit(1)
+	}
+	err = uploadToDOCR(input)
+	if err != nil {
+		log.Fatal("DOCR update error occured")
+		os.Exit(1)
+	}
+	//updates all the docr images based on users input
 	new_err := execCommand(input, appSpec)
 	if new_err.name != "" {
 		fmt.Println(new_err.name)
@@ -194,15 +221,15 @@ func main() {
 	}
 	newYaml, err := yaml.Marshal(appSpec)
 	if err != nil {
-		log.Fatal("Error in building json spec")
+		log.Fatal("Error in building spec from json data")
 		os.Exit(1)
 	}
-	err = ioutil.WriteFile(".do.app.yaml", newYaml, 0644)
+	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
 	if err != nil {
 		log.Fatal("Error in writing to yaml")
 		os.Exit(1)
 	}
-	cmd = exec.Command("sh", "-c", `doctl app update `+appId+` --spec app.yaml`)
+	cmd = exec.Command("sh", "-c", `doctl app update `+appId+` --spec .do._app.yaml`)
 	_, err = cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to update app:", err)

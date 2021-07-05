@@ -2,11 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/digitalocean/godo"
 	"sigs.k8s.io/yaml"
@@ -35,32 +35,20 @@ func readFileFrom(fileLocation string) ([]byte, error) {
 }
 
 //reads the file and return json object of type UpdatedRepo
-func getAllRepo(input string, appSpec string) ([]UpdatedRepo, godo.AppSpec, error) {
+func getAllRepo(input string) ([]UpdatedRepo, error) {
 	//parsing input
 	jsonByteValue, err := readFileFrom(input)
 	if err != nil {
 		log.Fatal("Error in reading from file: ", err)
-		return nil, godo.AppSpec{}, err
+		return nil, err
 	}
 	var allRepos []UpdatedRepo
 	err = json.Unmarshal(jsonByteValue, &allRepos)
 	if err != nil {
 		log.Fatal("Error in parsing json data from file: ", err)
-		return nil, godo.AppSpec{}, err
+		return nil, err
 	}
-	//parsing yml
-	yamlByteValue, err := readFileFrom(appSpec)
-	if err != nil {
-		log.Fatal("Error in reading from file: ", err)
-		return nil, godo.AppSpec{}, err
-	}
-	var spec godo.AppSpec
-	err = yaml.Unmarshal(yamlByteValue, &spec)
-	if err != nil {
-		return nil, godo.AppSpec{}, err
-	}
-	fmt.Printf("%+v\n", spec)
-	return allRepos, spec, nil
+	return allRepos, nil
 
 }
 func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
@@ -98,7 +86,7 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 
 }
 
-func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) (error, AllError) {
+func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 	checkForGitAndDockerHub(allFiles, &appSpec)
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
@@ -131,7 +119,7 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) (error, AllError)
 
 	}
 	if len(nameMap) == 0 {
-		return nil, AllError{}
+		return AllError{}
 	} else {
 		keys := make([]string, 0, len(nameMap))
 		for k := range nameMap {
@@ -141,20 +129,65 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) (error, AllError)
 			name:     "all files not found",
 			notFound: keys,
 		}
-		return errors.New(error_new.name), error_new
+		return error_new
 	}
 
 }
 
 func main() {
 	//import and return json object of changed repo
-	input, appSpec, err := getAllRepo("test1", "app.yaml")
+	//authenticate
+	cmd := exec.Command("sh", "-c", "doctl auth init")
+	_, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve app:", err)
+		os.Exit(1)
+	}
+	//get AppId
+	cmd = exec.Command("sh", "-c", "doctl app list -ojson")
+	apps, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve app:", err)
+		os.Exit(1)
+	}
+	var arr []godo.App
+	err = json.Unmarshal(apps, &arr)
+	if err != nil {
+		log.Fatal("Error in retrieving app id", err)
+		os.Exit(1)
+	}
+	var appId string
+	for k, _ := range arr {
+		if arr[k].Spec.Name == "sample-monorepo" {
+			appId = arr[k].ID
+			break
+		}
+	}
+	if appId == "" {
+		log.Fatal("Unable to retrieve appId")
+		os.Exit(1)
+	}
+	//get app based on appID
+	cmd = exec.Command("sh", "-c", `doctl app get `+appId+` -ojson`)
+	apps, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve app:", err)
+		os.Exit(1)
+	}
+	var app []godo.App
+	err = json.Unmarshal(apps, &app)
+	if err != nil {
+		fmt.Println("Error in retrieving app spec: ", err)
+		os.Exit(1)
+	}
+	appSpec := *app[0].Spec
+	input, err := getAllRepo("test1")
 	if err != nil {
 		fmt.Println("Error in Retrieving json data: ", err)
 		os.Exit(1)
 	}
-	err, new_err := execCommand(input, appSpec)
-	if err != nil {
+	new_err := execCommand(input, appSpec)
+	if new_err.name != "" {
 		fmt.Println(new_err.name)
 		fmt.Printf("%v", new_err.notFound)
 		os.Exit(1)
@@ -164,9 +197,22 @@ func main() {
 		log.Fatal("Error in building json spec")
 		os.Exit(1)
 	}
-	err = ioutil.WriteFile("app.yaml", newYaml, 0644)
+	err = ioutil.WriteFile(".do.app.yaml", newYaml, 0644)
 	if err != nil {
 		log.Fatal("Error in writing to yaml")
+		os.Exit(1)
+	}
+	cmd = exec.Command("sh", "-c", `doctl app update `+appId+` --spec app.yaml`)
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to update app:", err)
+		os.Exit(1)
+	}
+
+	cmd = exec.Command("sh", "-c", `doctl app create-deployment `+appId)
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to create-deployment for app:", err)
 		os.Exit(1)
 	}
 

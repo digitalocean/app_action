@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,6 +17,11 @@ type UpdatedRepo struct {
 	Name       string
 	Repository string
 	Tag        string
+}
+
+type AllError struct {
+	name     string
+	notFound []string
 }
 
 //reads the file from fileLocation
@@ -92,7 +98,7 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 
 }
 
-func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) {
+func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) (error, AllError) {
 	checkForGitAndDockerHub(allFiles, &appSpec)
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
@@ -103,22 +109,39 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) {
 		for _, service := range appSpec.Services {
 			if service.Name != allFiles[key].Name {
 				continue
+			} else {
+				service.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: allFiles[key].Repository, Tag: allFiles[key].Tag}
+				delete(nameMap, service.Name)
 			}
-			service.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: allFiles[key].Repository, Tag: allFiles[key].Tag}
 		}
 		for _, worker := range appSpec.Workers {
 			if worker.Name != allFiles[key].Name {
 				continue
 			}
 			worker.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: allFiles[key].Repository, Tag: allFiles[key].Tag}
+			delete(nameMap, worker.Name)
 		}
 		for _, job := range appSpec.Jobs {
 			if job.Name != allFiles[key].Name {
 				continue
 			}
 			job.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: allFiles[key].Repository, Tag: allFiles[key].Tag}
+			delete(nameMap, job.Name)
 		}
 
+	}
+	if len(nameMap) == 0 {
+		return nil, AllError{}
+	} else {
+		keys := make([]string, 0, len(nameMap))
+		for k := range nameMap {
+			keys = append(keys, k)
+		}
+		error_new := AllError{
+			name:     "all files not found",
+			notFound: keys,
+		}
+		return errors.New(error_new.name), error_new
 	}
 
 }
@@ -130,14 +153,18 @@ func main() {
 		fmt.Println("Error in Retrieving json data: ", err)
 		os.Exit(1)
 	}
-	execCommand(input, appSpec)
-
+	err, new_err := execCommand(input, appSpec)
+	if err != nil {
+		fmt.Println(new_err.name)
+		fmt.Printf("%v", new_err.notFound)
+		os.Exit(1)
+	}
 	newYaml, err := yaml.Marshal(appSpec)
 	if err != nil {
 		log.Fatal("Error in building json spec")
 		os.Exit(1)
 	}
-	err = ioutil.WriteFile("_app.yaml", newYaml, 0644)
+	err = ioutil.WriteFile("app.yaml", newYaml, 0644)
 	if err != nil {
 		log.Fatal("Error in writing to yaml")
 		os.Exit(1)

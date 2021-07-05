@@ -1,57 +1,61 @@
 name: sample-monorepo
-
-static_sites:
-- name: frontend
-  environment_slug: html
-  image:
-    registry_type: DOCR
-    repository: digitalocean/sample-monorepo
-    tag: latest
-  source_dir: frontend
-  index_document: hello.html
-  error_document: error.html
-  routes:
-  - path: /
-
-- name: landing
-  image:
-    registry_type: DOCR
-    repository: digitalocean/sample-monorepo
-    tag: latest
-  source_dir: landing
-  dockerfile_path: landing/Dockerfile
-  output_dir: /app
-  error_document: error.html
-  routes:
-  - path: /landing
-
+region: nyc
 services:
-- name: api
-  environment_slug: go
-  image:
-    registry_type: DOCR
-    repository: digitalocean/sample-monorepo
-    tag: latest
-  source_dir: api
-  routes:
-  - path: /api
-
-- name: webhook
-  environment_slug: go
-  github:
-    repo: digitalocean/sample-monorepo
-    branch: main
-    deploy_on_push: true
-  source_dir: webhook
-  routes:
-  - path: /webhook
-
+  - environment_slug: go
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: digitalocean/sample-monorepo
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    name: api
+    routes:
+      - path: /api
+    source_dir: api
+  - environment_slug: go
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: digitalocean/sample-monorepo
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    name: webhook
+    routes:
+      - path: /webhook
+    source_dir: webhook
+static_sites:
+  - environment_slug: html
+    error_document: error.html
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: digitalocean/sample-monorepo
+    index_document: hello.html
+    name: frontend
+    routes:
+      - path: /
+    source_dir: frontend
+  - dockerfile_path: landing/Dockerfile
+    error_document: error.html
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: digitalocean/sample-monorepo
+    name: landing
+    output_dir: /app
+    routes:
+      - path: /landing
+    source_dir: landing
 workers:
-- name: worker
-  github:
-    repo: digitalocean/sample-monorepo
-    branch: main
-    deploy_on_push: true
-  source_dir: worker
-  dockerfile_path: worker/Dockerfile
-  run_command: sh -c "cat ./ok && sleep infinity"
+  - dockerfile_path: worker/Dockerfile
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: digitalocean/sample-monorepo
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    name: worker
+    run_command: sh -c "cat ./ok && sleep infinity"
+    source_dir: worker

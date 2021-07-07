@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/digitalocean/godo"
 	"sigs.k8s.io/yaml"
@@ -41,6 +42,17 @@ func getAllRepo(input string) ([]UpdatedRepo, error) {
 	if err != nil {
 		log.Fatal("Error in reading from file: ", err)
 		return nil, err
+	}
+	//takes care of empty input for non normal Deployment
+	if strings.TrimSpace(string(jsonByteValue)) == "" {
+		appId := retrieveAppId()
+		cmd := exec.Command("sh", "-c", `doctl app create-deployment `+appId)
+		_, err = cmd.Output()
+		if err != nil {
+			log.Fatal("Unable to create-deployment for app:", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
 	}
 	var allRepos []UpdatedRepo
 	err = json.Unmarshal(jsonByteValue, &allRepos)
@@ -157,23 +169,15 @@ func uploadToDOCR(data []UpdatedRepo) error {
 	return nil
 
 }
-func main() {
-	//import and return json object of changed repo
-	//authenticate
-	cmd := exec.Command("sh", "-c", "doctl auth init")
-	_, err := cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to retrieve app:", err)
-		os.Exit(1)
-	}
-	//retrieve AppId from users deployment
-	cmd = exec.Command("sh", "-c", "doctl app list -ojson")
+func retrieveAppId() string {
+	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve app:", err)
 		os.Exit(1)
 	}
-	//parsing incoming data from AppId
+
+	//parsing incoming data for AppId
 	var arr []godo.App
 	err = json.Unmarshal(apps, &arr)
 	if err != nil {
@@ -191,9 +195,36 @@ func main() {
 		log.Fatal("Unable to retrieve appId")
 		os.Exit(1)
 	}
+	return appId
+}
+func main() {
+	//read json file from input
+	input, err := getAllRepo("test1")
+	if err != nil {
+		fmt.Println("Error in Retrieving json data: ", err)
+		os.Exit(1)
+	}
+	//authenticate
+	cmd := exec.Command("sh", "-c", "doctl auth init")
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve app:", err)
+		os.Exit(1)
+	}
+	//retrieve AppId from users deployment
+	appId := retrieveAppId()
+
+	//retrieve deployment id
+
+	cmd = exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appId)
+	deploymentId, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve app:", err)
+		os.Exit(1)
+	}
 	//get app based on appID
-	cmd = exec.Command("sh", "-c", `doctl app get `+appId+` -ojson`)
-	apps, err = cmd.Output()
+	cmd = exec.Command("sh", "-c", `doctl app get-deployment `+appId+` `+string(deploymentId)+`-ojson`)
+	apps, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve app:", err)
 		os.Exit(1)
@@ -205,11 +236,6 @@ func main() {
 		os.Exit(1)
 	}
 	appSpec := *app[0].Spec
-	input, err := getAllRepo("test1")
-	if err != nil {
-		fmt.Println("Error in Retrieving json data: ", err)
-		os.Exit(1)
-	}
 	//docr registry login
 	cmd = exec.Command("sh", "-c", "doctl registry login")
 	_, err = cmd.Output()

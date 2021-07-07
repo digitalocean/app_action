@@ -137,12 +137,22 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 func uploadToDOCR(data []UpdatedRepo) error {
 
 	for k, _ := range data {
-		cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository)
-		_, err := cmd.Output()
-		if err != nil {
-			log.Fatal("Unable to upload image to docr app:", data[k].Name)
-			return err
+		if data[k].Tag != "" && data[k].Name != "" && data[k].Repository != "" {
+			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:`+data[k].Tag)
+			_, err := cmd.Output()
+			if err != nil {
+				log.Fatal("Unable to upload image to docr app:", data[k].Name)
+				return err
+			}
+		} else if data[k].Name != "" && data[k].Repository != "" && data[k].Tag == "" {
+			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:latest`)
+			_, err := cmd.Output()
+			if err != nil {
+				log.Fatal("Unable to upload image to docr app:", data[k].Name)
+				return err
+			}
 		}
+
 	}
 	return nil
 
@@ -207,6 +217,7 @@ func main() {
 		log.Fatal("Unable to login to digitalocean registry:", err)
 		os.Exit(1)
 	}
+	//docr registry upload
 	err = uploadToDOCR(input)
 	if err != nil {
 		log.Fatal("DOCR update error occured")

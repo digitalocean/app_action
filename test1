@@ -1,12 +1,7 @@
 [
   {
-    "name": "webhook",
-    "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-    "tag": "latest"
-  },
-  {
     "name": "api",
-    "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-    "tag": "test2"
+    "repository": "registry.digitalocean.com/sample-go/add_sample",
+    "tag": "latest"
   }
 ]

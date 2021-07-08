@@ -13,4 +13,4 @@ RUN go build main.go
 
 RUN chmod +x main
 # Command to run the executable
-CMD ["./main"]
+CMD ["main"]

@@ -12,4 +12,3 @@ COPY . .
 RUN go build -o main main.go
 # Command to run the executable
 RUN chmod +x main
-CMD ["./main"]

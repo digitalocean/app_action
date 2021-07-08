@@ -34,9 +34,38 @@ func readFileFrom(fileLocation string) ([]byte, error) {
 	}
 	return byteValue, err
 }
+func isDeployed(appId string) {
+	done := false
+	for !done {
+		fmt.Println("App Platform is Building ....")
+		cmd := exec.Command("sh", "-c", `doctl app list-deployments `+appId+` -ojson `)
+		spec, err := cmd.Output()
+		if err != nil {
+			log.Fatal("Error in retrieving list of deployments", err)
+			os.Exit(1)
+		}
+		var app []godo.Deployment
+		err = json.Unmarshal(spec, &app)
+		if err != nil {
+			log.Fatal("Error in parsing deployment: ", err)
+			os.Exit(1)
+		}
+		if app[0].Phase == "ACTIVE" {
+			fmt.Println("Build successful")
+			done = true
+			os.Exit(0)
+		}
+		if app[0].Phase == "Failed" {
+			fmt.Println("Build unsuccessful")
+			done = true
+			os.Exit(1)
+		}
+
+	}
+}
 
 //reads the file and return json object of type UpdatedRepo
-func getAllRepo(input string) ([]UpdatedRepo, error) {
+func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 	//parsing input
 	jsonByteValue, err := readFileFrom(input)
 	if err != nil {
@@ -45,14 +74,14 @@ func getAllRepo(input string) ([]UpdatedRepo, error) {
 	}
 	//takes care of empty input for non normal Deployment
 	if strings.TrimSpace(string(jsonByteValue)) == "" {
-		appId := retrieveAppId()
+		appId := retrieveAppId(appName)
 		cmd := exec.Command("sh", "-c", `doctl app create-deployment `+appId)
 		_, err = cmd.Output()
 		if err != nil {
 			log.Fatal("Unable to create-deployment for app:", err)
 			os.Exit(1)
 		}
-		os.Exit(0)
+		isDeployed(appId)
 	}
 	var allRepos []UpdatedRepo
 	err = json.Unmarshal(jsonByteValue, &allRepos)
@@ -190,7 +219,7 @@ func uploadToDOCR(data []UpdatedRepo) error {
 	return nil
 
 }
-func retrieveAppId() string {
+func retrieveAppId(appName string) string {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
@@ -207,7 +236,7 @@ func retrieveAppId() string {
 	}
 	var appId string
 	for k, _ := range arr {
-		if arr[k].Spec.Name == "sample-monorepo" {
+		if arr[k].Spec.Name == string(appName) {
 			appId = arr[k].ID
 			break
 		}
@@ -219,21 +248,35 @@ func retrieveAppId() string {
 	return appId
 }
 func main() {
-	//read json file from input
-	input, err := getAllRepo("test1")
+	//retrieve input
+	cmd := exec.Command("sh", "-c", "${{ inputs.list_of_image}} > _temp")
+	_, err := cmd.Output()
 	if err != nil {
-		fmt.Println("Error in Retrieving json data: ", err)
+		log.Fatal("Unable to retrieve input:", err)
+		os.Exit(1)
+	}
+	cmd = exec.Command("sh", "-c", "${{ inputs.app_name}}")
+	name, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve input:", err)
+		os.Exit(1)
+	}
+
+	//read json file from input
+	input, err := getAllRepo("_temp", string(name))
+	if err != nil {
+		log.Fatal("Error in Retrieving json data: ", err)
 		os.Exit(1)
 	}
 	//authenticate
-	cmd := exec.Command("sh", "-c", "doctl auth init")
+	cmd = exec.Command("sh", "-c", "doctl auth init")
 	_, err = cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to authenticate:", err)
 		os.Exit(1)
 	}
 	//retrieve AppId from users deployment
-	appId := retrieveAppId()
+	appId := retrieveAppId(string(name))
 
 	//retrieve deployment id
 	cmd = exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appId)
@@ -253,7 +296,7 @@ func main() {
 	var app []godo.App
 	err = json.Unmarshal(apps, &app)
 	if err != nil {
-		fmt.Println("Error in retrieving app spec: ", err)
+		log.Fatal("Error in retrieving app spec: ", err)
 		os.Exit(1)
 	}
 	appSpec := *app[0].Spec
@@ -273,9 +316,9 @@ func main() {
 	//updates all the docr images based on users input
 	new_err := execCommand(input, appSpec)
 	if new_err.name != "" {
-		fmt.Println(new_err.name)
+		log.Fatal(new_err.name)
 		if len(new_err.notFound) != 0 {
-			fmt.Printf("%v", new_err.notFound)
+			log.Fatalf("%v", new_err.notFound)
 		}
 		os.Exit(1)
 	}
@@ -302,5 +345,6 @@ func main() {
 		log.Fatal("Unable to create-deployment for app:", err)
 		os.Exit(1)
 	}
+	isDeployed(appId)
 
 }

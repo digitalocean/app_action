@@ -223,6 +223,7 @@ func uploadToDOCR(data []UpdatedRepo) error {
 
 }
 func retrieveAppId(appName string) string {
+	fmt.Println(string(appName))
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
@@ -238,8 +239,9 @@ func retrieveAppId(appName string) string {
 		os.Exit(1)
 	}
 	var appId string
+
 	for k, _ := range arr {
-		if arr[k].Spec.Name == string(appName) {
+		if arr[k].Spec.Name == appName {
 			appId = arr[k].ID
 			break
 		}

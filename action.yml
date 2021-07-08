@@ -1,0 +1,21 @@
+name: DigitalOcean App Platform deployment
+description: Publish a Docker image to DigitalOcean's App Platform
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+
+inputs:
+  app_name:
+    description: name of the app image
+    required: true
+  list_of_image:
+    description: list of json object containing name, repository and tag of the digitalocean container registry to update
+    required: false
+    default: ""
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{inputs.app_name}}
+    - ${{inputs.list_of_image}}

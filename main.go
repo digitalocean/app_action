@@ -92,6 +92,8 @@ func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 	return allRepos, nil
 
 }
+
+//Remove git and DockerHub
 func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
@@ -127,7 +129,8 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 
 }
 
-func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
+//filters git and DockerHub apps and then updates app spec with DOCR
+func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 	checkForGitAndDockerHub(allFiles, &appSpec)
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
@@ -249,13 +252,13 @@ func retrieveAppId(appName string) string {
 }
 func main() {
 	//retrieve input
-	cmd := exec.Command("sh", "-c", "${{ inputs.list_of_image}} > _temp")
+	cmd := exec.Command("sh", "-c", "$2 > _temp")
 	_, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve input:", err)
 		os.Exit(1)
 	}
-	cmd = exec.Command("sh", "-c", "${{ inputs.app_name}}")
+	cmd = exec.Command("sh", "-c", "$1")
 	name, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve input:", err)
@@ -314,7 +317,7 @@ func main() {
 		os.Exit(1)
 	}
 	//updates all the docr images based on users input
-	new_err := execCommand(input, appSpec)
+	new_err := filterApps(input, appSpec)
 	if new_err.name != "" {
 		log.Fatal(new_err.name)
 		if len(new_err.notFound) != 0 {

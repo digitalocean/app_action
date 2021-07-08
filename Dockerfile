@@ -1,5 +1,5 @@
 # Start from the latest golang base image
-FROM golang:latest
+FROM golang:alpine
 # Set the Current Working Directory inside the container
 WORKDIR /app
 # Copy go mod and sum files
@@ -11,4 +11,4 @@ COPY . .
 # Build the Go app
 RUN go build -o main main.go
 # Command to run the executable
-ENTRYPOINT ["/main"]
+CMD ["./main"]

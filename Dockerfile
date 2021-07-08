@@ -11,4 +11,4 @@ COPY . .
 # Build the Go app
 RUN go build -o main main.go
 # Command to run the executable
-ENTRYPOINT ["./main"]
+ENTRYPOINT ["/main"]

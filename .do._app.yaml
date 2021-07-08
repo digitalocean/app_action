@@ -2,11 +2,11 @@ name: sample-monorepo
 region: nyc
 services:
 - environment_slug: go
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: digitalocean/sample-monorepo
   http_port: 8080
-  image:
-    registry_type: DOCR
-    repository: registry.digitalocean.com/sample-go/add_sample
-    tag: latest
   instance_count: 1
   instance_size_slug: basic-xxs
   name: api
@@ -50,10 +50,10 @@ static_sites:
   source_dir: landing
 workers:
 - dockerfile_path: worker/Dockerfile
-  github:
-    branch: main
-    deploy_on_push: true
-    repo: digitalocean/sample-monorepo
+  image:
+    registry_type: DOCR
+    repository: registry.digitalocean.com/sample-go/worker
+    tag: latest
   instance_count: 1
   instance_size_slug: basic-xxs
   name: worker

@@ -1,7 +1,0 @@
-[
-  {
-    "name": "api",
-    "repository": "registry.digitalocean.com/sample-go/add_sample",
-    "tag": "latest"
-  }
-]

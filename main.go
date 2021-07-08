@@ -110,7 +110,9 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 			if service.Name != allFiles[key].Name {
 				continue
 			} else {
-				service.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: allFiles[key].Repository, Tag: allFiles[key].Tag}
+				repos := strings.Split(allFiles[key].Repository, `/`)
+				repo := repos[len(repos)-1]
+				service.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
 				delete(nameMap, service.Name)
 			}
 		}
@@ -118,15 +120,28 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 			if worker.Name != allFiles[key].Name {
 				continue
 			}
-			worker.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: allFiles[key].Repository, Tag: allFiles[key].Tag}
+			repos := strings.Split(allFiles[key].Repository, `/`)
+			repo := repos[len(repos)-1]
+			worker.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
 			delete(nameMap, worker.Name)
 		}
 		for _, job := range appSpec.Jobs {
 			if job.Name != allFiles[key].Name {
 				continue
 			}
-			job.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: allFiles[key].Repository, Tag: allFiles[key].Tag}
+			repos := strings.Split(allFiles[key].Repository, `/`)
+			repo := repos[len(repos)-1]
+			job.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
 			delete(nameMap, job.Name)
+		}
+		for _, static := range appSpec.StaticSites {
+			if static.Name != allFiles[key].Name {
+				continue
+			} else {
+				return AllError{
+					name: `Static sites in App Platform do not support DOCR: ` + static.Name,
+				}
+			}
 		}
 
 	}
@@ -149,6 +164,12 @@ func execCommand(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 func uploadToDOCR(data []UpdatedRepo) error {
 
 	for k, _ := range data {
+		cmd := exec.Command("sh", "-c", `doctl registry login`)
+		_, err := cmd.Output()
+		if err != nil {
+			log.Fatal("Unable to login to registry:", data[k].Name)
+			return err
+		}
 		if data[k].Tag != "" && data[k].Name != "" && data[k].Repository != "" {
 			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:`+data[k].Tag)
 			_, err := cmd.Output()
@@ -208,25 +229,25 @@ func main() {
 	cmd := exec.Command("sh", "-c", "doctl auth init")
 	_, err = cmd.Output()
 	if err != nil {
-		log.Fatal("Unable to retrieve app:", err)
+		log.Fatal("Unable to authenticate:", err)
 		os.Exit(1)
 	}
 	//retrieve AppId from users deployment
 	appId := retrieveAppId()
 
 	//retrieve deployment id
-
 	cmd = exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appId)
-	deploymentId, err := cmd.Output()
+	deployId, err := cmd.Output()
 	if err != nil {
-		log.Fatal("Unable to retrieve app:", err)
+		log.Fatal("Unable to retrieve active deployment:", err)
 		os.Exit(1)
 	}
+	deploymentId := strings.TrimSpace(string(deployId))
 	//get app based on appID
-	cmd = exec.Command("sh", "-c", `doctl app get-deployment `+appId+` `+string(deploymentId)+`-ojson`)
+	cmd = exec.Command("sh", "-c", `doctl app get-deployment `+appId+` `+string(deploymentId)+` -ojson`)
 	apps, err := cmd.Output()
 	if err != nil {
-		log.Fatal("Unable to retrieve app:", err)
+		log.Fatal("Unable to retrieve currently deployed app id:", err)
 		os.Exit(1)
 	}
 	var app []godo.App
@@ -246,14 +267,16 @@ func main() {
 	//docr registry upload
 	err = uploadToDOCR(input)
 	if err != nil {
-		log.Fatal("DOCR update error occured")
+		log.Fatal("DOCR update error occurred")
 		os.Exit(1)
 	}
 	//updates all the docr images based on users input
 	new_err := execCommand(input, appSpec)
 	if new_err.name != "" {
 		fmt.Println(new_err.name)
-		fmt.Printf("%v", new_err.notFound)
+		if len(new_err.notFound) != 0 {
+			fmt.Printf("%v", new_err.notFound)
+		}
 		os.Exit(1)
 	}
 	newYaml, err := yaml.Marshal(appSpec)

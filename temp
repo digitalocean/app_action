@@ -1,0 +1,322 @@
+[
+  {
+    "id": "498190c9-3071-412d-bd28-d3a3be42b51d",
+    "spec": {
+      "name": "sample-monorepo",
+      "services": [
+        {
+          "name": "api",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "source_dir": "api",
+          "environment_slug": "go",
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/api"
+            }
+          ]
+        },
+        {
+          "name": "webhook",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "source_dir": "webhook",
+          "environment_slug": "go",
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/webhook"
+            }
+          ]
+        }
+      ],
+      "static_sites": [
+        {
+          "name": "frontend",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "source_dir": "frontend",
+          "environment_slug": "html",
+          "index_document": "hello.html",
+          "error_document": "error.html",
+          "routes": [
+            {
+              "path": "/"
+            }
+          ]
+        },
+        {
+          "name": "landing",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "dockerfile_path": "landing/Dockerfile",
+          "source_dir": "landing",
+          "output_dir": "/app",
+          "error_document": "error.html",
+          "routes": [
+            {
+              "path": "/landing"
+            }
+          ]
+        }
+      ],
+      "workers": [
+        {
+          "name": "worker",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "dockerfile_path": "worker/Dockerfile",
+          "run_command": "sh -c \"cat ./ok \u0026\u0026 sleep infinity\"",
+          "source_dir": "worker",
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1
+        }
+      ],
+      "region": "nyc"
+    },
+    "services": [
+      {
+        "name": "api",
+        "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+      },
+      {
+        "name": "webhook",
+        "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+      }
+    ],
+    "static_sites": [
+      {
+        "name": "frontend",
+        "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+      },
+      {
+        "name": "landing",
+        "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+      }
+    ],
+    "workers": [
+      {
+        "name": "worker",
+        "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+      }
+    ],
+    "phase_last_updated_at": "2021-07-06T00:30:32Z",
+    "created_at": "2021-07-06T00:29:50Z",
+    "updated_at": "2021-07-06T00:30:32Z",
+    "cause": "automated rollback after failed deployment of \"29f4ab67-a781-4d96-b283-d86725751c60\"",
+    "cloned_from": "ad2aefe0-40e8-4ab5-896a-0aa131ee077f",
+    "progress": {
+      "success_steps": 14,
+      "total_steps": 14,
+      "steps": [
+        {
+          "name": "build",
+          "status": "SUCCESS",
+          "steps": [
+            {
+              "name": "initialize",
+              "status": "SUCCESS",
+              "started_at": "2021-07-06T00:29:56.706146802Z",
+              "ended_at": "2021-07-06T00:29:56.87088831Z"
+            },
+            {
+              "name": "components",
+              "status": "SUCCESS",
+              "steps": [
+                {
+                  "name": "api",
+                  "status": "SUCCESS",
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "reason": {
+                    "code": "PreviousBuildReused",
+                    "message": "Your previous build was reused."
+                  },
+                  "component_name": "api",
+                  "message_base": "Building service"
+                },
+                {
+                  "name": "webhook",
+                  "status": "SUCCESS",
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "reason": {
+                    "code": "PreviousBuildReused",
+                    "message": "Your previous build was reused."
+                  },
+                  "component_name": "webhook",
+                  "message_base": "Building service"
+                },
+                {
+                  "name": "worker",
+                  "status": "SUCCESS",
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "reason": {
+                    "code": "PreviousBuildReused",
+                    "message": "Your previous build was reused."
+                  },
+                  "component_name": "worker",
+                  "message_base": "Building worker"
+                },
+                {
+                  "name": "frontend",
+                  "status": "SUCCESS",
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "reason": {
+                    "code": "PreviousBuildReused",
+                    "message": "Your previous build was reused."
+                  },
+                  "component_name": "frontend",
+                  "message_base": "Building static site"
+                },
+                {
+                  "name": "landing",
+                  "status": "SUCCESS",
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "reason": {
+                    "code": "PreviousBuildReused",
+                    "message": "Your previous build was reused."
+                  },
+                  "component_name": "landing",
+                  "message_base": "Building static site"
+                }
+              ],
+              "started_at": "2021-07-06T00:29:56.870928005Z",
+              "ended_at": "2021-07-06T00:29:56.878922121Z"
+            }
+          ],
+          "started_at": "2021-07-06T00:29:56.706109516Z",
+          "ended_at": "2021-07-06T00:29:56.921852441Z"
+        },
+        {
+          "name": "deploy",
+          "status": "SUCCESS",
+          "steps": [
+            {
+              "name": "initialize",
+              "status": "SUCCESS",
+              "started_at": "2021-07-06T00:30:03.998928049Z",
+              "ended_at": "2021-07-06T00:30:04.201884537Z"
+            },
+            {
+              "name": "components",
+              "status": "SUCCESS",
+              "steps": [
+                {
+                  "name": "api",
+                  "status": "SUCCESS",
+                  "steps": [
+                    {
+                      "name": "deploy",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "api",
+                      "message_base": "Deploying service"
+                    },
+                    {
+                      "name": "wait",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "api",
+                      "message_base": "Waiting for service"
+                    }
+                  ],
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "component_name": "api"
+                },
+                {
+                  "name": "webhook",
+                  "status": "SUCCESS",
+                  "steps": [
+                    {
+                      "name": "deploy",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "webhook",
+                      "message_base": "Deploying service"
+                    },
+                    {
+                      "name": "wait",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "webhook",
+                      "message_base": "Waiting for service"
+                    }
+                  ],
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "component_name": "webhook"
+                },
+                {
+                  "name": "worker",
+                  "status": "SUCCESS",
+                  "steps": [
+                    {
+                      "name": "deploy",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "worker",
+                      "message_base": "Deploying worker"
+                    },
+                    {
+                      "name": "wait",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "worker",
+                      "message_base": "Waiting for worker"
+                    }
+                  ],
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "component_name": "worker"
+                }
+              ],
+              "started_at": "2021-07-06T00:30:04.201934367Z",
+              "ended_at": "2021-07-06T00:30:31.04020527Z"
+            },
+            {
+              "name": "finalize",
+              "status": "SUCCESS",
+              "started_at": "2021-07-06T00:30:31.325533576Z",
+              "ended_at": "2021-07-06T00:30:32.28333381Z"
+            }
+          ],
+          "started_at": "2021-07-06T00:30:03.998886495Z",
+          "ended_at": "2021-07-06T00:30:32.283508453Z"
+        }
+      ]
+    },
+    "phase": "ACTIVE",
+    "tier_slug": "basic"
+  }
+]

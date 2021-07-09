@@ -25,15 +25,6 @@ type AllError struct {
 	notFound []string
 }
 
-//reads the file from fileLocation
-func readFileFrom(fileLocation string) ([]byte, error) {
-	byteValue, err := ioutil.ReadFile(fileLocation)
-	if err != nil {
-		log.Fatal("Error in reading from file: ", err)
-		return []byte{}, err
-	}
-	return byteValue, err
-}
 func isDeployed(appId string) {
 	done := false
 	for !done {
@@ -234,7 +225,7 @@ func retrieveAppId(appName string) string {
 	}
 	var appId string
 
-	for k, _ := range arr {
+	for k := range arr {
 		if arr[k].Spec.Name == appName {
 			appId = arr[k].ID
 			break

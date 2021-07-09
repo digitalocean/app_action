@@ -1,0 +1,952 @@
+[
+  {
+    "id": "a1b9eea7-7ef3-43b5-b362-894d42a3b4b6",
+    "owner_uuid": "dadb564a-07ab-4591-a640-4194ad0c2aeb",
+    "spec": {
+      "name": "sample-monorepo",
+      "services": [
+        {
+          "name": "api",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "source_dir": "api",
+          "environment_slug": "go",
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/api"
+            }
+          ]
+        },
+        {
+          "name": "webhook",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "source_dir": "webhook",
+          "environment_slug": "go",
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/webhook"
+            }
+          ]
+        }
+      ],
+      "static_sites": [
+        {
+          "name": "frontend",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "source_dir": "frontend",
+          "environment_slug": "html",
+          "index_document": "hello.html",
+          "error_document": "error.html",
+          "routes": [
+            {
+              "path": "/"
+            }
+          ]
+        },
+        {
+          "name": "landing",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "dockerfile_path": "landing/Dockerfile",
+          "source_dir": "landing",
+          "output_dir": "/app",
+          "error_document": "error.html",
+          "routes": [
+            {
+              "path": "/landing"
+            }
+          ]
+        }
+      ],
+      "workers": [
+        {
+          "name": "worker",
+          "github": {
+            "repo": "digitalocean/sample-monorepo",
+            "branch": "main",
+            "deploy_on_push": true
+          },
+          "dockerfile_path": "worker/Dockerfile",
+          "run_command": "sh -c \"cat ./ok \u0026\u0026 sleep infinity\"",
+          "source_dir": "worker",
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1
+        }
+      ],
+      "region": "nyc"
+    },
+    "last_deployment_active_at": "2021-07-08T08:11:48Z",
+    "default_ingress": "https://sample-monorepo-5i9pg.ondigitalocean.app",
+    "created_at": "2021-07-08T04:29:04Z",
+    "updated_at": "2021-07-08T08:11:54Z",
+    "active_deployment": {
+      "id": "12944fa4-7e7f-4bdc-9b61-0c50a7b6ec66",
+      "spec": {
+        "name": "sample-monorepo",
+        "services": [
+          {
+            "name": "api",
+            "github": {
+              "repo": "digitalocean/sample-monorepo",
+              "branch": "main",
+              "deploy_on_push": true
+            },
+            "source_dir": "api",
+            "environment_slug": "go",
+            "instance_size_slug": "basic-xxs",
+            "instance_count": 1,
+            "http_port": 8080,
+            "routes": [
+              {
+                "path": "/api"
+              }
+            ]
+          },
+          {
+            "name": "webhook",
+            "github": {
+              "repo": "digitalocean/sample-monorepo",
+              "branch": "main",
+              "deploy_on_push": true
+            },
+            "source_dir": "webhook",
+            "environment_slug": "go",
+            "instance_size_slug": "basic-xxs",
+            "instance_count": 1,
+            "http_port": 8080,
+            "routes": [
+              {
+                "path": "/webhook"
+              }
+            ]
+          }
+        ],
+        "static_sites": [
+          {
+            "name": "frontend",
+            "github": {
+              "repo": "digitalocean/sample-monorepo",
+              "branch": "main",
+              "deploy_on_push": true
+            },
+            "source_dir": "frontend",
+            "environment_slug": "html",
+            "index_document": "hello.html",
+            "error_document": "error.html",
+            "routes": [
+              {
+                "path": "/"
+              }
+            ]
+          },
+          {
+            "name": "landing",
+            "github": {
+              "repo": "digitalocean/sample-monorepo",
+              "branch": "main",
+              "deploy_on_push": true
+            },
+            "dockerfile_path": "landing/Dockerfile",
+            "source_dir": "landing",
+            "output_dir": "/app",
+            "error_document": "error.html",
+            "routes": [
+              {
+                "path": "/landing"
+              }
+            ]
+          }
+        ],
+        "workers": [
+          {
+            "name": "worker",
+            "github": {
+              "repo": "digitalocean/sample-monorepo",
+              "branch": "main",
+              "deploy_on_push": true
+            },
+            "dockerfile_path": "worker/Dockerfile",
+            "run_command": "sh -c \"cat ./ok \u0026\u0026 sleep infinity\"",
+            "source_dir": "worker",
+            "instance_size_slug": "basic-xxs",
+            "instance_count": 1
+          }
+        ],
+        "region": "nyc"
+      },
+      "services": [
+        {
+          "name": "api",
+          "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+        },
+        {
+          "name": "webhook",
+          "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+        }
+      ],
+      "static_sites": [
+        {
+          "name": "frontend",
+          "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+        },
+        {
+          "name": "landing",
+          "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+        }
+      ],
+      "workers": [
+        {
+          "name": "worker",
+          "source_commit_hash": "1957679dca1c5eb606a90a106145c2cc719dcdcc"
+        }
+      ],
+      "phase_last_updated_at": "2021-07-08T08:11:48Z",
+      "created_at": "2021-07-08T08:11:07Z",
+      "updated_at": "2021-07-08T08:11:48Z",
+      "cause": "manual",
+      "progress": {
+        "success_steps": 14,
+        "total_steps": 14,
+        "steps": [
+          {
+            "name": "build",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-07-08T08:11:16.505005235Z",
+                "ended_at": "2021-07-08T08:11:16.629900176Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "api",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "reason": {
+                      "code": "PreviousBuildReused",
+                      "message": "Your previous build was reused."
+                    },
+                    "component_name": "api",
+                    "message_base": "Building service"
+                  },
+                  {
+                    "name": "webhook",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "reason": {
+                      "code": "PreviousBuildReused",
+                      "message": "Your previous build was reused."
+                    },
+                    "component_name": "webhook",
+                    "message_base": "Building service"
+                  },
+                  {
+                    "name": "worker",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "reason": {
+                      "code": "PreviousBuildReused",
+                      "message": "Your previous build was reused."
+                    },
+                    "component_name": "worker",
+                    "message_base": "Building worker"
+                  },
+                  {
+                    "name": "frontend",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "reason": {
+                      "code": "PreviousBuildReused",
+                      "message": "Your previous build was reused."
+                    },
+                    "component_name": "frontend",
+                    "message_base": "Building static site"
+                  },
+                  {
+                    "name": "landing",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "reason": {
+                      "code": "PreviousBuildReused",
+                      "message": "Your previous build was reused."
+                    },
+                    "component_name": "landing",
+                    "message_base": "Building static site"
+                  }
+                ],
+                "started_at": "2021-07-08T08:11:16.629993155Z",
+                "ended_at": "2021-07-08T08:11:16.636593951Z"
+              }
+            ],
+            "started_at": "2021-07-08T08:11:16.50496129Z",
+            "ended_at": "2021-07-08T08:11:16.660664777Z"
+          },
+          {
+            "name": "deploy",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-07-08T08:11:23.807850349Z",
+                "ended_at": "2021-07-08T08:11:23.958197265Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "api",
+                    "status": "SUCCESS",
+                    "steps": [
+                      {
+                        "name": "deploy",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "api",
+                        "message_base": "Deploying service"
+                      },
+                      {
+                        "name": "wait",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "api",
+                        "message_base": "Waiting for service"
+                      }
+                    ],
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "api"
+                  },
+                  {
+                    "name": "webhook",
+                    "status": "SUCCESS",
+                    "steps": [
+                      {
+                        "name": "deploy",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "webhook",
+                        "message_base": "Deploying service"
+                      },
+                      {
+                        "name": "wait",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "webhook",
+                        "message_base": "Waiting for service"
+                      }
+                    ],
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "webhook"
+                  },
+                  {
+                    "name": "worker",
+                    "status": "SUCCESS",
+                    "steps": [
+                      {
+                        "name": "deploy",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "worker",
+                        "message_base": "Deploying worker"
+                      },
+                      {
+                        "name": "wait",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "worker",
+                        "message_base": "Waiting for worker"
+                      }
+                    ],
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "worker"
+                  }
+                ],
+                "started_at": "2021-07-08T08:11:23.958247927Z",
+                "ended_at": "2021-07-08T08:11:46.228685522Z"
+              },
+              {
+                "name": "finalize",
+                "status": "SUCCESS",
+                "started_at": "2021-07-08T08:11:46.581155384Z",
+                "ended_at": "2021-07-08T08:11:48.305970908Z"
+              }
+            ],
+            "started_at": "2021-07-08T08:11:23.80779612Z",
+            "ended_at": "2021-07-08T08:11:48.306109427Z"
+          }
+        ]
+      },
+      "phase": "ACTIVE",
+      "tier_slug": "basic"
+    },
+    "last_deployment_created_at": "2021-07-08T08:11:07Z",
+    "live_url": "https://sample-monorepo-5i9pg.ondigitalocean.app",
+    "region": {
+      "slug": "nyc",
+      "label": "New York",
+      "flag": "usa",
+      "continent": "North America",
+      "data_centers": [
+        "nyc1",
+        "nyc3"
+      ]
+    },
+    "tier_slug": "basic",
+    "live_url_base": "https://sample-monorepo-5i9pg.ondigitalocean.app",
+    "live_domain": "sample-monorepo-5i9pg.ondigitalocean.app"
+  },
+  {
+    "id": "31cba56a-613e-4bfa-8ac2-551af6135510",
+    "owner_uuid": "dadb564a-07ab-4591-a640-4194ad0c2aeb",
+    "spec": {
+      "name": "sample-dockerfile",
+      "services": [
+        {
+          "name": "sample-dockerfile",
+          "git": {
+            "repo_clone_url": "https://github.com/digitalocean/sample-dockerfile.git",
+            "branch": "main"
+          },
+          "dockerfile_path": "Dockerfile",
+          "instance_size_slug": "basic-xs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/"
+            }
+          ]
+        }
+      ],
+      "region": "nyc"
+    },
+    "last_deployment_active_at": "2021-07-06T00:33:28Z",
+    "default_ingress": "https://sample-dockerfile-xvbgl.ondigitalocean.app",
+    "created_at": "2021-07-06T00:31:43Z",
+    "updated_at": "2021-07-06T00:33:28Z",
+    "active_deployment": {
+      "id": "f0f4f961-8dfc-4d4e-84b8-7a49023d67d1",
+      "spec": {
+        "name": "sample-dockerfile",
+        "services": [
+          {
+            "name": "sample-dockerfile",
+            "git": {
+              "repo_clone_url": "https://github.com/digitalocean/sample-dockerfile.git",
+              "branch": "main"
+            },
+            "dockerfile_path": "Dockerfile",
+            "instance_size_slug": "basic-xs",
+            "instance_count": 1,
+            "http_port": 8080,
+            "routes": [
+              {
+                "path": "/"
+              }
+            ]
+          }
+        ],
+        "region": "nyc"
+      },
+      "services": [
+        {
+          "name": "sample-dockerfile",
+          "source_commit_hash": "a93e17f28169c24bae8f497989121198e692b08c"
+        }
+      ],
+      "phase_last_updated_at": "2021-07-06T00:33:28Z",
+      "created_at": "2021-07-06T00:31:42Z",
+      "updated_at": "2021-07-06T00:33:28Z",
+      "cause": "initial deployment",
+      "progress": {
+        "success_steps": 6,
+        "total_steps": 6,
+        "steps": [
+          {
+            "name": "build",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-07-06T00:31:50.751790735Z",
+                "ended_at": "2021-07-06T00:31:50.821265877Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "sample-dockerfile",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "sample-dockerfile",
+                    "message_base": "Building service"
+                  }
+                ],
+                "started_at": "2021-07-06T00:31:50.821309284Z",
+                "ended_at": "2021-07-06T00:33:09.128084531Z"
+              }
+            ],
+            "started_at": "2021-07-06T00:31:50.751688135Z",
+            "ended_at": "2021-07-06T00:33:09.27220356Z"
+          },
+          {
+            "name": "deploy",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-07-06T00:33:17.328383111Z",
+                "ended_at": "2021-07-06T00:33:17.589503997Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "sample-dockerfile",
+                    "status": "SUCCESS",
+                    "steps": [
+                      {
+                        "name": "deploy",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "sample-dockerfile",
+                        "message_base": "Deploying service"
+                      },
+                      {
+                        "name": "wait",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "sample-dockerfile",
+                        "message_base": "Waiting for service"
+                      }
+                    ],
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "sample-dockerfile"
+                  }
+                ],
+                "started_at": "2021-07-06T00:33:17.589547808Z",
+                "ended_at": "2021-07-06T00:33:25.516580934Z"
+              },
+              {
+                "name": "finalize",
+                "status": "SUCCESS",
+                "started_at": "2021-07-06T00:33:25.576280038Z",
+                "ended_at": "2021-07-06T00:33:27.913349633Z"
+              }
+            ],
+            "started_at": "2021-07-06T00:33:17.32833801Z",
+            "ended_at": "2021-07-06T00:33:27.913502143Z"
+          }
+        ]
+      },
+      "phase": "ACTIVE",
+      "tier_slug": "basic"
+    },
+    "last_deployment_created_at": "2021-07-06T00:31:42Z",
+    "live_url": "https://sample-dockerfile-xvbgl.ondigitalocean.app",
+    "region": {
+      "slug": "nyc",
+      "label": "New York",
+      "flag": "usa",
+      "continent": "North America",
+      "data_centers": [
+        "nyc1",
+        "nyc3"
+      ]
+    },
+    "tier_slug": "basic",
+    "live_url_base": "https://sample-dockerfile-xvbgl.ondigitalocean.app",
+    "live_domain": "sample-dockerfile-xvbgl.ondigitalocean.app"
+  },
+  {
+    "id": "5e6b7bd1-d04e-4694-8679-bf8651f72663",
+    "owner_uuid": "dadb564a-07ab-4591-a640-4194ad0c2aeb",
+    "spec": {
+      "name": "sample-golang",
+      "services": [
+        {
+          "name": "web",
+          "git": {
+            "repo_clone_url": "https://github.com/snormore/sample-golang.git",
+            "branch": "main"
+          },
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/"
+            }
+          ]
+        }
+      ],
+      "region": "nyc"
+    },
+    "last_deployment_active_at": "2021-06-22T21:54:51Z",
+    "default_ingress": "https://sample-golang-tmdyd.ondigitalocean.app",
+    "created_at": "2021-06-22T06:33:08Z",
+    "updated_at": "2021-06-22T21:54:53Z",
+    "active_deployment": {
+      "id": "40a646b0-805a-4ba9-9747-50e6cda614bc",
+      "spec": {
+        "name": "sample-golang",
+        "services": [
+          {
+            "name": "web",
+            "git": {
+              "repo_clone_url": "https://github.com/snormore/sample-golang.git",
+              "branch": "main"
+            },
+            "instance_size_slug": "basic-xxs",
+            "instance_count": 1,
+            "http_port": 8080,
+            "routes": [
+              {
+                "path": "/"
+              }
+            ]
+          }
+        ],
+        "region": "nyc"
+      },
+      "services": [
+        {
+          "name": "web",
+          "source_commit_hash": "b0be4f585f61fa32e307743ea56a768e56c4aa37"
+        }
+      ],
+      "phase_last_updated_at": "2021-06-22T21:54:51Z",
+      "created_at": "2021-06-22T21:52:49Z",
+      "updated_at": "2021-06-22T21:54:51Z",
+      "cause": "app spec updated",
+      "progress": {
+        "success_steps": 6,
+        "total_steps": 6,
+        "steps": [
+          {
+            "name": "build",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-06-22T21:52:53.12018642Z",
+                "ended_at": "2021-06-22T21:52:53.240367916Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "web",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "web",
+                    "message_base": "Building service"
+                  }
+                ],
+                "started_at": "2021-06-22T21:52:53.240405963Z",
+                "ended_at": "2021-06-22T21:54:25.304148037Z"
+              }
+            ],
+            "started_at": "2021-06-22T21:52:53.12014521Z",
+            "ended_at": "2021-06-22T21:54:25.376007444Z"
+          },
+          {
+            "name": "deploy",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-06-22T21:54:32.177360245Z",
+                "ended_at": "2021-06-22T21:54:32.382074653Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "web",
+                    "status": "SUCCESS",
+                    "steps": [
+                      {
+                        "name": "deploy",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "web",
+                        "message_base": "Deploying service"
+                      },
+                      {
+                        "name": "wait",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "web",
+                        "message_base": "Waiting for service"
+                      }
+                    ],
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "web"
+                  }
+                ],
+                "started_at": "2021-06-22T21:54:32.382137054Z",
+                "ended_at": "2021-06-22T21:54:46.098141048Z"
+              },
+              {
+                "name": "finalize",
+                "status": "SUCCESS",
+                "started_at": "2021-06-22T21:54:46.305945073Z",
+                "ended_at": "2021-06-22T21:54:50.886383035Z"
+              }
+            ],
+            "started_at": "2021-06-22T21:54:32.177285715Z",
+            "ended_at": "2021-06-22T21:54:50.88660237Z"
+          }
+        ]
+      },
+      "phase": "ACTIVE",
+      "tier_slug": "basic"
+    },
+    "last_deployment_created_at": "2021-06-22T21:52:49Z",
+    "live_url": "https://sample-golang-tmdyd.ondigitalocean.app",
+    "region": {
+      "slug": "nyc",
+      "label": "New York",
+      "flag": "usa",
+      "continent": "North America",
+      "data_centers": [
+        "nyc1",
+        "nyc3"
+      ]
+    },
+    "tier_slug": "basic",
+    "live_url_base": "https://sample-golang-tmdyd.ondigitalocean.app",
+    "live_domain": "sample-golang-tmdyd.ondigitalocean.app"
+  },
+  {
+    "id": "e4051a1f-4889-4bac-baa2-f2a28ebdcaa9",
+    "owner_uuid": "dadb564a-07ab-4591-a640-4194ad0c2aeb",
+    "spec": {
+      "name": "sample-nodejs",
+      "services": [
+        {
+          "name": "sample-nodejs",
+          "git": {
+            "repo_clone_url": "https://github.com/digitalocean/sample-nodejs.git",
+            "branch": "main"
+          },
+          "run_command": "yarn start",
+          "source_dir": "/",
+          "environment_slug": "node-js",
+          "instance_size_slug": "basic-xs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/"
+            }
+          ]
+        }
+      ],
+      "region": "nyc"
+    },
+    "last_deployment_active_at": "2021-06-22T06:34:49Z",
+    "default_ingress": "https://sample-nodejs-8tgcd.ondigitalocean.app",
+    "created_at": "2021-06-22T06:32:15Z",
+    "updated_at": "2021-06-22T06:34:49Z",
+    "active_deployment": {
+      "id": "42425561-3441-4b1a-b314-fe3f181ed20b",
+      "spec": {
+        "name": "sample-nodejs",
+        "services": [
+          {
+            "name": "sample-nodejs",
+            "git": {
+              "repo_clone_url": "https://github.com/digitalocean/sample-nodejs.git",
+              "branch": "main"
+            },
+            "run_command": "yarn start",
+            "source_dir": "/",
+            "environment_slug": "node-js",
+            "instance_size_slug": "basic-xs",
+            "instance_count": 1,
+            "http_port": 8080,
+            "routes": [
+              {
+                "path": "/"
+              }
+            ]
+          }
+        ],
+        "region": "nyc"
+      },
+      "services": [
+        {
+          "name": "sample-nodejs",
+          "source_commit_hash": "a8c4f029cf7cfccd9e6dd750c362720a187f47f9"
+        }
+      ],
+      "phase_last_updated_at": "2021-06-22T06:34:49Z",
+      "created_at": "2021-06-22T06:32:15Z",
+      "updated_at": "2021-06-22T06:34:49Z",
+      "cause": "initial deployment",
+      "progress": {
+        "success_steps": 6,
+        "total_steps": 6,
+        "steps": [
+          {
+            "name": "build",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-06-22T06:32:19.105275179Z",
+                "ended_at": "2021-06-22T06:32:19.201763288Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "sample-nodejs",
+                    "status": "SUCCESS",
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "sample-nodejs",
+                    "message_base": "Building service"
+                  }
+                ],
+                "started_at": "2021-06-22T06:32:19.201783272Z",
+                "ended_at": "2021-06-22T06:34:17.248699453Z"
+              }
+            ],
+            "started_at": "2021-06-22T06:32:19.105248049Z",
+            "ended_at": "2021-06-22T06:34:17.398933346Z"
+          },
+          {
+            "name": "deploy",
+            "status": "SUCCESS",
+            "steps": [
+              {
+                "name": "initialize",
+                "status": "SUCCESS",
+                "started_at": "2021-06-22T06:34:23.957088596Z",
+                "ended_at": "2021-06-22T06:34:24.200205294Z"
+              },
+              {
+                "name": "components",
+                "status": "SUCCESS",
+                "steps": [
+                  {
+                    "name": "sample-nodejs",
+                    "status": "SUCCESS",
+                    "steps": [
+                      {
+                        "name": "deploy",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "sample-nodejs",
+                        "message_base": "Deploying service"
+                      },
+                      {
+                        "name": "wait",
+                        "status": "SUCCESS",
+                        "started_at": "0001-01-01T00:00:00Z",
+                        "ended_at": "0001-01-01T00:00:00Z",
+                        "component_name": "sample-nodejs",
+                        "message_base": "Waiting for service"
+                      }
+                    ],
+                    "started_at": "0001-01-01T00:00:00Z",
+                    "ended_at": "0001-01-01T00:00:00Z",
+                    "component_name": "sample-nodejs"
+                  }
+                ],
+                "started_at": "2021-06-22T06:34:24.200266144Z",
+                "ended_at": "2021-06-22T06:34:45.389211561Z"
+              },
+              {
+                "name": "finalize",
+                "status": "SUCCESS",
+                "started_at": "2021-06-22T06:34:45.620558559Z",
+                "ended_at": "2021-06-22T06:34:49.340410438Z"
+              }
+            ],
+            "started_at": "2021-06-22T06:34:23.957050307Z",
+            "ended_at": "2021-06-22T06:34:49.340570978Z"
+          }
+        ]
+      },
+      "phase": "ACTIVE",
+      "tier_slug": "basic"
+    },
+    "last_deployment_created_at": "2021-06-22T06:32:15Z",
+    "live_url": "https://sample-nodejs-8tgcd.ondigitalocean.app",
+    "region": {
+      "slug": "nyc",
+      "label": "New York",
+      "flag": "usa",
+      "continent": "North America",
+      "data_centers": [
+        "nyc1",
+        "nyc3"
+      ]
+    },
+    "tier_slug": "basic",
+    "live_url_base": "https://sample-nodejs-8tgcd.ondigitalocean.app",
+    "live_domain": "sample-nodejs-8tgcd.ondigitalocean.app"
+  }
+]

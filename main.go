@@ -254,7 +254,7 @@ func main() {
 	//doctl
 	_, err := exec.Command("sh", "-c", "doctl auth init").Output()
 	if err != nil {
-		log.Fatal("Unable to authenticate ")
+		log.Fatal("Unable to authenticate ", err)
 		os.Exit(1)
 	}
 	//read json file from input

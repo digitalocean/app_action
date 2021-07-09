@@ -252,11 +252,6 @@ func main() {
 	name := os.Args[2]
 	fmt.Println("this is name", name)
 	//doctl
-	_, err := exec.Command("sh", "-c", "doctl auth init").Output()
-	if err != nil {
-		log.Fatal("Unable to authenticate ", err.Error())
-		os.Exit(1)
-	}
 	//read json file from input
 	input, err := getAllRepo(os.Args[1], name)
 	if err != nil {

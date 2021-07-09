@@ -16,3 +16,6 @@ inputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'
+  args:
+    - "{{ inputs.list_of_image }}"
+    - "{{ inputs.app_name }}"

@@ -67,16 +67,11 @@ func isDeployed(appId string) {
 //reads the file and return json object of type UpdatedRepo
 func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 	//parsing input
-	jsonByteValue, err := readFileFrom(input)
-	if err != nil {
-		log.Fatal("Error in reading from file: ", err)
-		return nil, err
-	}
 	//takes care of empty input for non normal Deployment
-	if strings.TrimSpace(string(jsonByteValue)) == "" {
+	if strings.TrimSpace(string(input)) == "" {
 		appId := retrieveAppId(appName)
 		cmd := exec.Command("sh", "-c", `doctl app create-deployment `+appId)
-		_, err = cmd.Output()
+		_, err := cmd.Output()
 		if err != nil {
 			log.Fatal("Unable to create-deployment for app:", err)
 			os.Exit(1)
@@ -84,7 +79,7 @@ func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 		isDeployed(appId)
 	}
 	var allRepos []UpdatedRepo
-	err = json.Unmarshal(jsonByteValue, &allRepos)
+	err := json.Unmarshal([]byte(input), &allRepos)
 	if err != nil {
 		log.Fatal("Error in parsing json data from file: ", err)
 		return nil, err
@@ -253,31 +248,21 @@ func retrieveAppId(appName string) string {
 }
 func main() {
 	//retrieve input
-	cmd := exec.Command("sh", "-c", `${{ inputs.list_of_image}} > _temp`)
-	_, err := cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to retrieve input:", err)
-		os.Exit(1)
-	}
-	cmd = exec.Command("sh", "-c", `${{ inputs.app_name}}`)
-	name, err := cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to retrieve input:", err)
-		os.Exit(1)
-	}
-	fmt.Println("this is name", string(name))
+	fmt.Println(os.Args[1])
+	name := os.Args[2]
+	fmt.Println("this is name", name)
 	//read json file from input
-	input, err := getAllRepo("_temp", string(name))
+	input, err := getAllRepo(os.Args[1], name)
 	if err != nil {
 		log.Fatal("Error in Retrieving json data: ", err)
 		os.Exit(1)
 	}
 
 	//retrieve AppId from users deployment
-	appId := retrieveAppId(string(name))
+	appId := retrieveAppId(name)
 
 	//retrieve deployment id
-	cmd = exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appId)
+	cmd := exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appId)
 	deployId, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve active deployment:", err)

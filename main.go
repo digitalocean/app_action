@@ -254,13 +254,13 @@ func retrieveAppId(appName string) string {
 }
 func main() {
 	//retrieve input
-	cmd := exec.Command("sh", "-c", `echo "$2" > _temp`)
+	cmd := exec.Command("sh", "-c", `${{ inputs.list_of_image}} > _temp`)
 	_, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve input:", err)
 		os.Exit(1)
 	}
-	cmd = exec.Command("sh", "-c", `echo "$1"`)
+	cmd = exec.Command("sh", "-c", `${{ inputs.app_name}}`)
 	name, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve input:", err)

@@ -224,6 +224,7 @@ func uploadToDOCR(data []UpdatedRepo) error {
 }
 func retrieveAppId(appName string) string {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
+	fmt.Println(appName)
 	apps, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve app:", err)

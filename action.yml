@@ -19,3 +19,4 @@ runs:
   args:
     - "${{ inputs.list_of_image }}"
     - "${{ inputs.app_name }}"
+    - "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"

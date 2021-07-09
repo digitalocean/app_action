@@ -270,7 +270,7 @@ func main() {
 	cmd = exec.Command("sh", "-c", "doctl auth init")
 	auth, err := cmd.Output()
 	if err != nil {
-		log.Fatal("Unable to authenticate:", err)
+		log.Fatal("Unable to authenticate:", err.Error())
 		os.Exit(1)
 	}
 	fmt.Println(auth)

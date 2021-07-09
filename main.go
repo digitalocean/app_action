@@ -266,14 +266,6 @@ func main() {
 		log.Fatal("Unable to retrieve input:", err)
 		os.Exit(1)
 	}
-	//authenticate
-	cmd = exec.Command("sh", "-c", "doctl auth init")
-	auth, err := cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to authenticate:", err.Error())
-		os.Exit(1)
-	}
-	fmt.Println(auth)
 	//read json file from input
 	input, err := getAllRepo("_temp", string(name))
 	if err != nil {

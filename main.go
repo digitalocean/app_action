@@ -58,7 +58,7 @@ func isDeployed(appId string) {
 //reads the file and return json object of type UpdatedRepo
 func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 	//parsing input
-	//takes care of empty input for non normal Deployment
+	//takes care of empty input for  Deployment
 	if strings.TrimSpace(string(input)) == "" {
 		appId := retrieveAppId(appName)
 		cmd := exec.Command("sh", "-c", `doctl app create-deployment `+appId)
@@ -179,35 +179,35 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 
 }
 
-func uploadToDOCR(data []UpdatedRepo) error {
+// func uploadToDOCR(data []UpdatedRepo) error {
 
-	for k, _ := range data {
-		cmd := exec.Command("sh", "-c", `doctl registry login`)
-		_, err := cmd.Output()
-		if err != nil {
-			log.Fatal("Unable to login to registry:", data[k].Name)
-			return err
-		}
-		if data[k].Tag != "" && data[k].Name != "" && data[k].Repository != "" {
-			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:`+data[k].Tag)
-			_, err := cmd.Output()
-			if err != nil {
-				log.Fatal("Unable to upload image to docr app:", data[k].Name)
-				return err
-			}
-		} else if data[k].Name != "" && data[k].Repository != "" && data[k].Tag == "" {
-			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:latest`)
-			_, err := cmd.Output()
-			if err != nil {
-				log.Fatal("Unable to upload image to docr app:", data[k].Name)
-				return err
-			}
-		}
+// 	for k, _ := range data {
+// 		cmd := exec.Command("sh", "-c", `doctl registry login`)
+// 		_, err := cmd.Output()
+// 		if err != nil {
+// 			log.Fatal("Unable to login to registry:", data[k].Name)
+// 			return err
+// 		}
+// 		if data[k].Tag != "" && data[k].Name != "" && data[k].Repository != "" {
+// 			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:`+data[k].Tag)
+// 			_, err := cmd.Output()
+// 			if err != nil {
+// 				log.Fatal("Unable to upload image to docr app:", data[k].Name)
+// 				return err
+// 			}
+// 		} else if data[k].Name != "" && data[k].Repository != "" && data[k].Tag == "" {
+// 			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:latest`)
+// 			_, err := cmd.Output()
+// 			if err != nil {
+// 				log.Fatal("Unable to upload image to docr app:", data[k].Name)
+// 				return err
+// 			}
+// 		}
 
-	}
-	return nil
+// 	}
+// 	return nil
 
-}
+// }
 func retrieveAppId(appName string) string {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
@@ -288,11 +288,11 @@ func main() {
 		os.Exit(1)
 	}
 	//docr registry upload
-	err = uploadToDOCR(input)
-	if err != nil {
-		log.Fatal("DOCR update error occurred")
-		os.Exit(1)
-	}
+	// err = uploadToDOCR(input)
+	// if err != nil {
+	// 	log.Fatal("DOCR update error occurred")
+	// 	os.Exit(1)
+	// }
 	//updates all the docr images based on users input
 	new_err := filterApps(input, appSpec)
 	if new_err.name != "" {

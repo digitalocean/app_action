@@ -223,7 +223,6 @@ func uploadToDOCR(data []UpdatedRepo) error {
 
 }
 func retrieveAppId(appName string) string {
-	fmt.Println(string(appName))
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
@@ -254,13 +253,13 @@ func retrieveAppId(appName string) string {
 }
 func main() {
 	//retrieve input
-	cmd := exec.Command("sh", "-c", "$2 > _temp")
+	cmd := exec.Command("sh", "-c", `echo "$2" > _temp`)
 	_, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve input:", err)
 		os.Exit(1)
 	}
-	cmd = exec.Command("sh", "-c", "$1")
+	cmd = exec.Command("sh", "-c", `echo "$1"`)
 	name, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve input:", err)

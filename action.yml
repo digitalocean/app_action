@@ -8,6 +8,9 @@ inputs:
   app_name:
     description: name of the app image
     required: true
+  token:
+    description: digitalocean doctl auth token
+    required: true
   list_of_image:
     description: list of json object containing name, repository and tag of the digitalocean container registry to update
     required: false
@@ -19,4 +22,4 @@ runs:
   args:
     - "${{ inputs.list_of_image }}"
     - "${{ inputs.app_name }}"
-    - "${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}"
+    - "${{ inputs.token }}"

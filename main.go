@@ -265,6 +265,7 @@ func main() {
 		log.Fatal("Unable to retrieve input:", err)
 		os.Exit(1)
 	}
+	fmt.Println(string(name))
 	//read json file from input
 	input, err := getAllRepo("_temp", string(name))
 	if err != nil {

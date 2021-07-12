@@ -1,105 +1,117 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
+
+	"github.com/digitalocean/godo"
+	"gopkg.in/yaml.v2"
 )
 
-//reads the file from fileLocation
-func readFileFrom(fileLocation string) ([]byte, error) {
-	byteValue, err := ioutil.ReadFile(fileLocation)
-	if err != nil {
-		log.Fatal("Error in reading from file: ", err)
-		return []byte{}, err
-	}
-	return byteValue, err
-}
-func testingFileCreation() (string, error) {
-	os.Remove("_test")
-	testFileInput := `[
-	{
-	  "name": "frontend",
-	  "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-	  "tag": "latest"
-	},
-	{
-	  "name": "landing",
-	  "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-	  "tag": "test1"
-	},
-	{
-	  "name": "api",
-	  "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-	  "tag": "test2"
-	}
-  ]`
-	testFile := []byte(testFileInput)
-	file, err := os.Create("_test")
-	if err != nil {
-		return "", err
-	}
-	_, err = file.Write(testFile)
-	if err != nil {
-		return "", err
-	}
-	return testFileInput, nil
-}
-func TestReadFileFrom(t *testing.T) {
-	//Test to check if read is working correctly
-	//For this I will read test1 file and verify the output
+func TestGetAllRepo(t *testing.T) {
 
-	testFileInput, err := testingFileCreation()
+	temp := `[ {
+		"name": "frontend",
+		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
+		"tag": "latest"
+	  }]`
+	allRepos, err := getAllRepo(temp, "_")
 	if err != nil {
-		t.Error("Error in file Creation: ", err)
+		t.Errorf("Error in parsing input json data")
 	}
-	jsonFile, err := readFileFrom("_test")
+	if allRepos[0].Name != "frontend" ||
+		allRepos[0].Repository != "registry.digitalocean.com/<my-registry>/<my-image>" ||
+		allRepos[0].Tag != "latest" {
+		t.Errorf("Error in unmarshal")
+	}
+	//testing individual deployment for get all repo
+	_, err = getAllRepo("", os.Getenv("TEST_APP_NAME"))
 	if err != nil {
-		t.Error("Unable to read file", err)
+		t.Errorf(err.Error())
 	}
-	if string(jsonFile) != testFileInput {
-		t.Error("mismatched file: ", testFileInput)
-	}
-
 }
 
-// func TestGetAllRepo(t *testing.T) {
-// 	_, err := testingFileCreation()
-// 	if err != nil {
-// 		t.Error("Error in file Creation: ", err)
-// 	}
-// 	allRepo, spec, err := getAllRepo("_test", "_temp")
-// 	if err != nil {
-// 		t.Error("Error in parsing json data")
-// 	}
-// 	var temp = []UpdatedRepo{
-// 		{
-// 			"frontend",
-// 			"registry.digitalocean.com/<my-registry>/<my-image>",
-// 			"latest",
-// 		},
-// 		{
-// 			"landing",
-// 			"registry.digitalocean.com/<my-registry>/<my-image>",
-// 			"test1",
-// 		},
-// 		{
-// 			"api",
-// 			"registry.digitalocean.com/<my-registry>/<my-image>",
-// 			"test2",
-// 		},
-// 	}
-// 	if !reflect.DeepEqual(allRepo, temp) {
-// 		t.Errorf("Error in retrieving struct from json")
-// 	}
+func TestCheckForGitAndDockerHub(t *testing.T) {
+	test_input, err := ioutil.ReadFile("sample-golang.yaml")
+	if err != nil {
+		t.Errorf("error in reading test file")
+	}
+	var app godo.AppSpec
+	err = yaml.Unmarshal(test_input, &app)
+	if err != nil {
+		t.Errorf("Error in unmarshalling test yaml")
+	}
+	if app.Services[0].Name == "web" && app.Services[0].Git.RepoCloneURL == "https://github.com/snormore/sample-golang.git" {
+		t.Errorf("Error in parsing test data")
+	}
+	temp := `[ {
+		"name": "web",
+		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
+		"tag": "latest"
+	  }]`
+	allRepos, err := getAllRepo(temp, "_")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if allRepos[0].Name != "web" ||
+		allRepos[0].Repository != "registry.digitalocean.com/<my-registry>/<my-image>" ||
+		allRepos[0].Tag != "latest" {
+		t.Errorf("error in unmarshalling input data")
+	}
 
-// 	os.Remove("_test")
+	checkForGitAndDockerHub(allRepos, &app)
+	if app.Services[0].Name == "web" && app.Services[0].Git != nil {
 
-// }
+		t.Errorf("error in checkForGitAndDockerHub")
+	}
+
+}
+func TestFilterApps(t *testing.T) {
+	test_input, err := ioutil.ReadFile("sample-golang.yaml")
+	if err != nil {
+		t.Errorf("error in reading test file")
+	}
+	var app godo.AppSpec
+	err = yaml.Unmarshal(test_input, &app)
+	if err != nil {
+		t.Errorf("Error in unmarshalling test yaml")
+	}
+	if app.Services[0].Name == "web" && app.Services[0].Git.RepoCloneURL == "https://github.com/snormore/sample-golang.git" {
+		t.Errorf("Error in parsing test data")
+	}
+	temp := `[ {
+		"name": "web",
+		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
+		"tag": "latest"
+	  }]`
+	allRepos, err := getAllRepo(temp, "_")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if allRepos[0].Name != "web" ||
+		allRepos[0].Repository != "registry.digitalocean.com/<my-registry>/<my-image>" ||
+		allRepos[0].Tag != "latest" {
+		t.Errorf("error in unmarshalling input data")
+	}
+
+	aErr := filterApps(allRepos, app)
+	if aErr.name != "" {
+		t.Errorf(aErr.name)
+	}
+	if app.Services[0].Image.RegistryType != "DOCR" ||
+		app.Services[0].Image.Repository != "<my-image>" ||
+		app.Services[0].Image.Tag != "latest" {
+		t.Errorf("error in filterApps")
+	}
+}
 func TestRetrieveAppId(t *testing.T) {
-	appid := retrieveAppId("sample-golang")
-	fmt.Println(appid)
-
+	appid, err := retrieveAppId("sample-golang")
+	if appid == "" || err != nil {
+		t.Errorf("Error in retrieving appid")
+	}
+	_, err = retrieveAppId("sadasfasfsa")
+	if err == nil {
+		t.Errorf("Not able to handle invalid name")
+	}
 }

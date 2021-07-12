@@ -1,0 +1,12 @@
+name: sample-golang
+region: nyc
+services:
+- git:
+    branch: main
+    repo_clone_url: https://github.com/snormore/sample-golang.git
+  http_port: 8080
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  name: web
+  routes:
+  - path: /

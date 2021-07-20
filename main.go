@@ -29,28 +29,22 @@ type AllError struct {
 
 func main() {
 	//retrieve input
-	fmt.Println(os.Args[1])
 	name := os.Args[2]
-	fmt.Println("this is name", name)
-
 	//doctl
 	_, err := exec.Command("sh", "-c", `doctl auth init --access-token `+os.Args[3]).Output()
 	if err != nil {
 		log.Fatal("Unable to authenticate ", err.Error())
-		os.Exit(1)
 	}
 	//read json file from input
 	input, err := getAllRepo(os.Args[1], name)
 	if err != nil {
 		log.Fatal("Error in Retrieving json data: ", err)
-		os.Exit(1)
 	}
 
 	//retrieve AppId from users deployment
 	appID, err := retrieveAppID(name)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	//retrieve deployment id
@@ -58,7 +52,6 @@ func main() {
 	deployID, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve active deployment:", err)
-		os.Exit(1)
 	}
 	deploymentID := strings.TrimSpace(string(deployID))
 
@@ -67,14 +60,12 @@ func main() {
 	apps, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve currently deployed app id:", err)
-		os.Exit(1)
 	}
 
 	var app []godo.App
 	err = json.Unmarshal(apps, &app)
 	if err != nil {
 		log.Fatal("Error in retrieving app spec: ", err)
-		os.Exit(1)
 	}
 	appSpec := *app[0].Spec
 
@@ -83,7 +74,6 @@ func main() {
 	_, err = cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to login to digitalocean registry:", err)
-		os.Exit(1)
 	}
 
 	//updates all the docr images based on users input
@@ -99,27 +89,23 @@ func main() {
 	newYaml, err := yaml.Marshal(appSpec)
 	if err != nil {
 		log.Fatal("Error in building spec from json data")
-		os.Exit(1)
 	}
 
 	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
 	if err != nil {
 		log.Fatal("Error in writing to yaml")
-		os.Exit(1)
 	}
 
 	cmd = exec.Command("sh", "-c", `doctl app update `+appID+` --spec .do._app.yaml`)
 	_, err = cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to update app:", err)
-		os.Exit(1)
 	}
 
 	cmd = exec.Command("sh", "-c", `doctl app create-deployment `+appID)
 	_, err = cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to create-deployment for app:", err)
-		os.Exit(1)
 	}
 	isDeployed(appID)
 }
@@ -144,7 +130,7 @@ func isDeployed(appID string) error {
 		}
 		if app[0].Phase == "Failed" {
 			fmt.Println("Build unsuccessful")
-			return errors.New("Build unsuccessful")
+			return errors.New("build unsuccessful")
 		}
 	}
 	return nil
@@ -308,4 +294,3 @@ func retrieveAppID(appName string) (string, error) {
 
 	return appID, nil
 }
-

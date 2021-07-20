@@ -11,26 +11,124 @@ import (
 	"strings"
 
 	"github.com/digitalocean/godo"
-	"sigs.k8s.io/yaml"
+	"gopkg.in/yaml.v2"
 )
 
-//used for parsing json object of changed repo
+// UpdatedRepo used for parsing json object of changed repo
 type UpdatedRepo struct {
 	Name       string
 	Repository string
 	Tag        string
 }
 
+// AllError is used for handling errors
 type AllError struct {
 	name     string
 	notFound []string
 }
 
-func isDeployed(appId string) error {
+func main() {
+	//retrieve input
+	fmt.Println(os.Args[1])
+	name := os.Args[2]
+	fmt.Println("this is name", name)
+
+	//doctl
+	_, err := exec.Command("sh", "-c", `doctl auth init --access-token `+os.Args[3]).Output()
+	if err != nil {
+		log.Fatal("Unable to authenticate ", err.Error())
+		os.Exit(1)
+	}
+	//read json file from input
+	input, err := getAllRepo(os.Args[1], name)
+	if err != nil {
+		log.Fatal("Error in Retrieving json data: ", err)
+		os.Exit(1)
+	}
+
+	//retrieve AppId from users deployment
+	appID, err := retrieveAppID(name)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	//retrieve deployment id
+	cmd := exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appID)
+	deployID, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve active deployment:", err)
+		os.Exit(1)
+	}
+	deploymentID := strings.TrimSpace(string(deployID))
+
+	//get app based on appID
+	cmd = exec.Command("sh", "-c", `doctl app get-deployment `+appID+` `+string(deploymentID)+` -ojson`)
+	apps, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve currently deployed app id:", err)
+		os.Exit(1)
+	}
+
+	var app []godo.App
+	err = json.Unmarshal(apps, &app)
+	if err != nil {
+		log.Fatal("Error in retrieving app spec: ", err)
+		os.Exit(1)
+	}
+	appSpec := *app[0].Spec
+
+	//docr registry login
+	cmd = exec.Command("sh", "-c", "doctl registry login")
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to login to digitalocean registry:", err)
+		os.Exit(1)
+	}
+
+	//updates all the docr images based on users input
+	newErr := filterApps(input, appSpec)
+	if newErr.name != "" {
+		log.Fatal(newErr.name)
+		if len(newErr.notFound) != 0 {
+			log.Fatalf("%v", newErr.notFound)
+		}
+		os.Exit(1)
+	}
+
+	newYaml, err := yaml.Marshal(appSpec)
+	if err != nil {
+		log.Fatal("Error in building spec from json data")
+		os.Exit(1)
+	}
+
+	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
+	if err != nil {
+		log.Fatal("Error in writing to yaml")
+		os.Exit(1)
+	}
+
+	cmd = exec.Command("sh", "-c", `doctl app update `+appID+` --spec .do._app.yaml`)
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to update app:", err)
+		os.Exit(1)
+	}
+
+	cmd = exec.Command("sh", "-c", `doctl app create-deployment `+appID)
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to create-deployment for app:", err)
+		os.Exit(1)
+	}
+	isDeployed(appID)
+}
+
+func isDeployed(appID string) error {
 	done := false
 	for !done {
 		fmt.Println("App Platform is Building ....")
-		cmd := exec.Command("sh", "-c", `doctl app list-deployments `+appId+` -ojson `)
+		cmd := exec.Command("sh", "-c", `doctl app list-deployments `+appID+` -ojson `)
 		spec, err := cmd.Output()
 		if err != nil {
 			return errors.New("error in retrieving list of deployments")
@@ -52,21 +150,21 @@ func isDeployed(appId string) error {
 	return nil
 }
 
-//reads the file and return json object of type UpdatedRepo
+// getAllRepo reads the file and return json object of type UpdatedRepo
 func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 
 	//takes care of empty input for  Deployment
 	if strings.TrimSpace(string(input)) == "" {
-		appId, err := retrieveAppId(appName)
+		appID, err := retrieveAppID(appName)
 		if err != nil {
 			return nil, err
 		}
-		cmd := exec.Command("sh", "-c", `doctl app create-deployment `+appId)
+		cmd := exec.Command("sh", "-c", `doctl app create-deployment `+appID)
 		_, err = cmd.Output()
 		if err != nil {
 			return nil, errors.New("unable to create-deployment for app")
 		}
-		error := isDeployed(appId)
+		error := isDeployed(appID)
 		if error != nil {
 			return nil, error
 		}
@@ -80,7 +178,7 @@ func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 	return allRepos, nil
 }
 
-//Remove git and DockerHub
+// checkForGitAndDockerHub Remove git and DockerHub
 func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
@@ -116,7 +214,7 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 
 }
 
-//filters git and DockerHub apps and then updates app spec with DOCR
+// filterApps filters git and DockerHub apps and then updates app spec with DOCR
 func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 	checkForGitAndDockerHub(allFiles, &appSpec)
 	var nameMap = make(map[string]bool)
@@ -124,7 +222,7 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 		nameMap[allFiles[val].Name] = true
 	}
 
-	for key, _ := range allFiles {
+	for key := range allFiles {
 		for _, service := range appSpec.Services {
 			if service.Name != allFiles[key].Name {
 				continue
@@ -166,50 +264,21 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 	}
 	if len(nameMap) == 0 {
 		return AllError{}
-	} else {
-		keys := make([]string, 0, len(nameMap))
-		for k := range nameMap {
-			keys = append(keys, k)
-		}
-		error_new := AllError{
-			name:     "all files not found",
-			notFound: keys,
-		}
-		return error_new
+	}
+
+	keys := make([]string, 0, len(nameMap))
+	for k := range nameMap {
+		keys = append(keys, k)
+	}
+	return AllError{
+		name:     "all files not found",
+		notFound: keys,
 	}
 
 }
 
-// func uploadToDOCR(data []UpdatedRepo) error {
-
-// 	for k, _ := range data {
-// 		cmd := exec.Command("sh", "-c", `doctl registry login`)
-// 		_, err := cmd.Output()
-// 		if err != nil {
-// 			log.Fatal("Unable to login to registry:", data[k].Name)
-// 			return err
-// 		}
-// 		if data[k].Tag != "" && data[k].Name != "" && data[k].Repository != "" {
-// 			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:`+data[k].Tag)
-// 			_, err := cmd.Output()
-// 			if err != nil {
-// 				log.Fatal("Unable to upload image to docr app:", data[k].Name)
-// 				return err
-// 			}
-// 		} else if data[k].Name != "" && data[k].Repository != "" && data[k].Tag == "" {
-// 			cmd := exec.Command("sh", "-c", `docker push `+data[k].Repository+`:latest`)
-// 			_, err := cmd.Output()
-// 			if err != nil {
-// 				log.Fatal("Unable to upload image to docr app:", data[k].Name)
-// 				return err
-// 			}
-// 		}
-
-// 	}
-// 	return nil
-
-// }
-func retrieveAppId(appName string) (string, error) {
+// retrieveAppID ...
+func retrieveAppID(appName string) (string, error) {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
@@ -222,111 +291,16 @@ func retrieveAppId(appName string) (string, error) {
 	if err != nil {
 		return "", errors.New("error in parsing data for AppId")
 	}
-	var appId string
+	var appID string
 
 	for k := range arr {
 		if arr[k].Spec.Name == appName {
-			appId = arr[k].ID
+			appID = arr[k].ID
 			break
 		}
 	}
-	if appId == "" {
+	if appID == "" {
 		return "", errors.New("app not found")
 	}
-	return appId, nil
-}
-func main() {
-	//retrieve input
-	fmt.Println(os.Args[1])
-	name := os.Args[2]
-	fmt.Println("this is name", name)
-	//doctl
-	_, err := exec.Command("sh", "-c", `doctl auth init --access-token `+os.Args[3]).Output()
-	if err != nil {
-		log.Fatal("Unable to authenticate ", err.Error())
-		os.Exit(1)
-	}
-	//read json file from input
-	input, err := getAllRepo(os.Args[1], name)
-	if err != nil {
-		log.Fatal("Error in Retrieving json data: ", err)
-		os.Exit(1)
-	}
-
-	//retrieve AppId from users deployment
-	appId, err := retrieveAppId(name)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-
-	//retrieve deployment id
-	cmd := exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appId)
-	deployId, err := cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to retrieve active deployment:", err)
-		os.Exit(1)
-	}
-	deploymentId := strings.TrimSpace(string(deployId))
-	//get app based on appID
-	cmd = exec.Command("sh", "-c", `doctl app get-deployment `+appId+` `+string(deploymentId)+` -ojson`)
-	apps, err := cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to retrieve currently deployed app id:", err)
-		os.Exit(1)
-	}
-	var app []godo.App
-	err = json.Unmarshal(apps, &app)
-	if err != nil {
-		log.Fatal("Error in retrieving app spec: ", err)
-		os.Exit(1)
-	}
-	appSpec := *app[0].Spec
-	//docr registry login
-	cmd = exec.Command("sh", "-c", "doctl registry login")
-	_, err = cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to login to digitalocean registry:", err)
-		os.Exit(1)
-	}
-	//docr registry upload
-	// err = uploadToDOCR(input)
-	// if err != nil {
-	// 	log.Fatal("DOCR update error occurred")
-	// 	os.Exit(1)
-	// }
-	//updates all the docr images based on users input
-	new_err := filterApps(input, appSpec)
-	if new_err.name != "" {
-		log.Fatal(new_err.name)
-		if len(new_err.notFound) != 0 {
-			log.Fatalf("%v", new_err.notFound)
-		}
-		os.Exit(1)
-	}
-	newYaml, err := yaml.Marshal(appSpec)
-	if err != nil {
-		log.Fatal("Error in building spec from json data")
-		os.Exit(1)
-	}
-	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
-	if err != nil {
-		log.Fatal("Error in writing to yaml")
-		os.Exit(1)
-	}
-	cmd = exec.Command("sh", "-c", `doctl app update `+appId+` --spec .do._app.yaml`)
-	_, err = cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to update app:", err)
-		os.Exit(1)
-	}
-
-	cmd = exec.Command("sh", "-c", `doctl app create-deployment `+appId)
-	_, err = cmd.Output()
-	if err != nil {
-		log.Fatal("Unable to create-deployment for app:", err)
-		os.Exit(1)
-	}
-	isDeployed(appId)
-
+	return appID, nil
 }

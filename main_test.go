@@ -33,12 +33,12 @@ func TestGetAllRepo(t *testing.T) {
 }
 
 func TestCheckForGitAndDockerHub(t *testing.T) {
-	test_input, err := ioutil.ReadFile("sample-golang.yaml")
+	testInput, err := ioutil.ReadFile("sample-golang.yaml")
 	if err != nil {
 		t.Errorf("error in reading test file")
 	}
 	var app godo.AppSpec
-	err = yaml.Unmarshal(test_input, &app)
+	err = yaml.Unmarshal(testInput, &app)
 	if err != nil {
 		t.Errorf("Error in unmarshalling test yaml")
 	}
@@ -68,12 +68,12 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 
 }
 func TestFilterApps(t *testing.T) {
-	test_input, err := ioutil.ReadFile("sample-golang.yaml")
+	testInput, err := ioutil.ReadFile("testdata/sample-golang.yaml")
 	if err != nil {
 		t.Errorf("error in reading test file")
 	}
 	var app godo.AppSpec
-	err = yaml.Unmarshal(test_input, &app)
+	err = yaml.Unmarshal(testInput, &app)
 	if err != nil {
 		t.Errorf("Error in unmarshalling test yaml")
 	}
@@ -105,12 +105,12 @@ func TestFilterApps(t *testing.T) {
 		t.Errorf("error in filterApps")
 	}
 }
-func TestRetrieveAppId(t *testing.T) {
-	appid, err := retrieveAppId("sample-golang")
-	if appid == "" || err != nil {
+func TestRetrieveAppID(t *testing.T) {
+	appID, err := retrieveAppID("sample-golang")
+	if appID == "" || err != nil {
 		t.Errorf("Error in retrieving appid")
 	}
-	_, err = retrieveAppId("sadasfasfsa")
+	_, err = retrieveAppID("sadasfasfsa")
 	if err == nil {
 		t.Errorf("Not able to handle invalid name")
 	}

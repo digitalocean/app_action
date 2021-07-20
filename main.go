@@ -46,7 +46,7 @@ func isDeployed(appId string) error {
 		}
 		if app[0].Phase == "Failed" {
 			fmt.Println("Build unsuccessful")
-			return error.New("Build unsuccessful")
+			return errors.New("Build unsuccessful")
 		}
 	}
 	return nil
@@ -327,6 +327,10 @@ func main() {
 		log.Fatal("Unable to create-deployment for app:", err)
 		os.Exit(1)
 	}
-	isDeployed(appId)
+	err = isDeployed(appId)
+	if err != nil{
+		log.Fatal(err)
+		os.Exit(1)
+	}
 
 }

@@ -144,7 +144,7 @@ func isDeployed(appID string) error {
 		}
 		if app[0].Phase == "Failed" {
 			fmt.Println("Build unsuccessful")
-			return nil
+			return errors.New("Build unsuccessful")
 		}
 	}
 	return nil
@@ -302,5 +302,104 @@ func retrieveAppID(appName string) (string, error) {
 	if appID == "" {
 		return "", errors.New("app not found")
 	}
+
 	return appID, nil
+}
+func main() {
+	//retrieve input
+	fmt.Println(os.Args[1])
+	name := os.Args[2]
+	fmt.Println("this is name", name)
+	//doctl
+	_, err := exec.Command("sh", "-c", `doctl auth init --access-token `+os.Args[3]).Output()
+	if err != nil {
+		log.Fatal("Unable to authenticate ", err.Error())
+		os.Exit(1)
+	}
+	//read json file from input
+	input, err := getAllRepo(os.Args[1], name)
+	if err != nil {
+		log.Fatal("Error in Retrieving json data: ", err)
+		os.Exit(1)
+	}
+
+	//retrieve AppId from users deployment
+	appId, err := retrieveAppId(name)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	//retrieve deployment id
+	cmd := exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appId)
+	deployId, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve active deployment:", err)
+		os.Exit(1)
+	}
+	deploymentId := strings.TrimSpace(string(deployId))
+	//get app based on appID
+	cmd = exec.Command("sh", "-c", `doctl app get-deployment `+appId+` `+string(deploymentId)+` -ojson`)
+	apps, err := cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to retrieve currently deployed app id:", err)
+		os.Exit(1)
+	}
+	var app []godo.App
+	err = json.Unmarshal(apps, &app)
+	if err != nil {
+		log.Fatal("Error in retrieving app spec: ", err)
+		os.Exit(1)
+	}
+	appSpec := *app[0].Spec
+	//docr registry login
+	cmd = exec.Command("sh", "-c", "doctl registry login")
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to login to digitalocean registry:", err)
+		os.Exit(1)
+	}
+	//docr registry upload
+	// err = uploadToDOCR(input)
+	// if err != nil {
+	// 	log.Fatal("DOCR update error occurred")
+	// 	os.Exit(1)
+	// }
+	//updates all the docr images based on users input
+	new_err := filterApps(input, appSpec)
+	if new_err.name != "" {
+		log.Fatal(new_err.name)
+		if len(new_err.notFound) != 0 {
+			log.Fatalf("%v", new_err.notFound)
+		}
+		os.Exit(1)
+	}
+	newYaml, err := yaml.Marshal(appSpec)
+	if err != nil {
+		log.Fatal("Error in building spec from json data")
+		os.Exit(1)
+	}
+	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
+	if err != nil {
+		log.Fatal("Error in writing to yaml")
+		os.Exit(1)
+	}
+	cmd = exec.Command("sh", "-c", `doctl app update `+appId+` --spec .do._app.yaml`)
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to update app:", err)
+		os.Exit(1)
+	}
+
+	cmd = exec.Command("sh", "-c", `doctl app create-deployment `+appId)
+	_, err = cmd.Output()
+	if err != nil {
+		log.Fatal("Unable to create-deployment for app:", err)
+		os.Exit(1)
+	}
+	err = isDeployed(appId)
+	if err != nil{
+		log.Fatal(err)
+		os.Exit(1)
+	}
 }

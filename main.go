@@ -168,6 +168,9 @@ func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 		if error != nil {
 			return nil, error
 		}
+		if error == nil {
+			os.Exit(0)
+		}
 		return nil, nil
 	}
 	var allRepos []UpdatedRepo

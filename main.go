@@ -46,7 +46,7 @@ func isDeployed(appId string) error {
 		}
 		if app[0].Phase == "Failed" {
 			fmt.Println("Build unsuccessful")
-			return nil
+			return error.New("Build unsuccessful")
 		}
 	}
 	return nil

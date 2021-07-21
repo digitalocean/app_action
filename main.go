@@ -31,7 +31,8 @@ func main() {
 	//retrieve input
 	name := os.Args[2]
 	//doctl
-	_, err := exec.Command("sh", "-c", `doctl auth init --access-token `+os.Args[3]).Output()
+
+	_, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", os.Args[3])).Output()
 	if err != nil {
 		log.Fatal("Unable to authenticate ", err.Error())
 	}
@@ -41,14 +42,14 @@ func main() {
 		log.Fatal("Error in Retrieving json data: ", err)
 	}
 
-	//retrieve AppId from users deployment
+	//retrieve AppID from users deployment
 	appID, err := retrieveAppID(name)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//retrieve deployment id
-	cmd := exec.Command("sh", "-c", "doctl apps get --format ActiveDeployment.ID --no-header "+appID)
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get --format ActiveDeployment.ID --no-header %s", appID))
 	deployID, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve active deployment:", err)
@@ -56,7 +57,7 @@ func main() {
 	deploymentID := strings.TrimSpace(string(deployID))
 
 	//get app based on appID
-	cmd = exec.Command("sh", "-c", `doctl app get-deployment `+appID+` `+string(deploymentID)+` -ojson`)
+	cmd = exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
 	apps, err := cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to retrieve currently deployed app id:", err)
@@ -96,25 +97,24 @@ func main() {
 		log.Fatal("Error in writing to yaml")
 	}
 
-	cmd = exec.Command("sh", "-c", `doctl app update `+appID+` --spec .do._app.yaml`)
+	cmd = exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec .do._app.yaml", appID))
 	_, err = cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to update app:", err)
 	}
 
-	cmd = exec.Command("sh", "-c", `doctl app create-deployment `+appID)
+	cmd = exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
 	_, err = cmd.Output()
 	if err != nil {
 		log.Fatal("Unable to create-deployment for app:", err)
 	}
 	isDeployed(appID)
 }
-
 func isDeployed(appID string) error {
 	done := false
 	for !done {
 		fmt.Println("App Platform is Building ....")
-		cmd := exec.Command("sh", "-c", `doctl app list-deployments `+appID+` -ojson `)
+		cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s -ojson", appID))
 		spec, err := cmd.Output()
 		if err != nil {
 			return errors.New("error in retrieving list of deployments")
@@ -145,7 +145,7 @@ func getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
 		if err != nil {
 			return nil, err
 		}
-		cmd := exec.Command("sh", "-c", `doctl app create-deployment `+appID)
+		cmd := exec.Command("sh", "-c", "doctl app create-deployment %s", appID)
 		_, err = cmd.Output()
 		if err != nil {
 			return nil, errors.New("unable to create-deployment for app")
@@ -245,7 +245,7 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 				continue
 			} else {
 				return AllError{
-					name: `Static sites in App Platform do not support DOCR: ` + static.Name,
+					name: fmt.Sprintf("Static sites in App Platform do not support DOCR: %s", static.Name),
 				}
 			}
 		}

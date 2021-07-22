@@ -1,0 +1,36 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy App
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+    - name: Login to docker hub
+      uses: actions-hub/docker/login@master
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Publish Image to Container Registry
+      uses: ripplr-io/docr-docker-publish@v1
+      with:
+        image_path: sample-go/add_sample
+    - name: DigitalOcean App Platform deployment
+      uses: ParamPatel207/app_action@go_attempt
+      with:
+        app_name: sample-golang
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        list_of_image: '[
+                          {
+                            "name": "web",
+                            "repository": "registry.digitalocean.com/sample-go/add_sample",
+                            "tag": "latest"
+                          }
+                        ]'

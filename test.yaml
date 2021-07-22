@@ -1,0 +1,37 @@
+ 
+   name: create-app-yaml
+ 
+   static_sites:
+   - name: static
+     github:
+       repo: digitalocean/sample-gatsby
+       branch: master
+     routes:
+     - path: '/static'
+     cors:
+      allow-methods: 
+      allow-headers:
+      allow-origins:
+
+     custom_headers:
+      cors:
+        allow-methods: 
+        allow-headers:
+        allow-origins:
+      csp:
+        default-src: 
+        font-src:
+        frame-src:
+      Feature-policy:
+        unsized-media:
+        geolocation:
+     - key: 'some-header-name'
+       value: 'some-header-value'
+     - key: 'another'
+       value: "another-value"
+      
+ 
+   databases:
+   - name: db
+     engine: PG
+     version: "12"

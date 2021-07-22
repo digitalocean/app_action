@@ -1,0 +1,131 @@
+[
+  {
+    "id": "8801ffe3-8afe-4d5e-a700-c2f737b81312",
+    "spec": {
+      "name": "sample-golang",
+      "services": [
+        {
+          "name": "web",
+          "image": {
+            "registry_type": "DOCR",
+            "repository": "add_sample",
+            "tag": "latest"
+          },
+          "instance_size_slug": "basic-xxs",
+          "instance_count": 1,
+          "http_port": 8080,
+          "routes": [
+            {
+              "path": "/"
+            }
+          ]
+        }
+      ],
+      "region": "nyc"
+    },
+    "services": [
+      {
+        "name": "web"
+      }
+    ],
+    "phase_last_updated_at": "2021-07-21T21:49:07Z",
+    "created_at": "2021-07-21T21:48:19Z",
+    "updated_at": "2021-07-21T21:49:07Z",
+    "cause": "manual",
+    "progress": {
+      "success_steps": 6,
+      "total_steps": 6,
+      "steps": [
+        {
+          "name": "build",
+          "status": "SUCCESS",
+          "steps": [
+            {
+              "name": "initialize",
+              "status": "SUCCESS",
+              "started_at": "2021-07-21T21:48:35.512775397Z",
+              "ended_at": "2021-07-21T21:48:35.582262631Z"
+            },
+            {
+              "name": "components",
+              "status": "SUCCESS",
+              "steps": [
+                {
+                  "name": "web",
+                  "status": "SUCCESS",
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "reason": {
+                    "code": "PreviousBuildReused",
+                    "message": "Your previous build was reused."
+                  },
+                  "component_name": "web",
+                  "message_base": "Building service"
+                }
+              ],
+              "started_at": "2021-07-21T21:48:35.582287555Z",
+              "ended_at": "2021-07-21T21:48:35.582770619Z"
+            }
+          ],
+          "started_at": "2021-07-21T21:48:35.512747237Z",
+          "ended_at": "2021-07-21T21:48:35.585305076Z"
+        },
+        {
+          "name": "deploy",
+          "status": "SUCCESS",
+          "steps": [
+            {
+              "name": "initialize",
+              "status": "SUCCESS",
+              "started_at": "2021-07-21T21:48:42.969073936Z",
+              "ended_at": "2021-07-21T21:48:43.234490888Z"
+            },
+            {
+              "name": "components",
+              "status": "SUCCESS",
+              "steps": [
+                {
+                  "name": "web",
+                  "status": "SUCCESS",
+                  "steps": [
+                    {
+                      "name": "deploy",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "web",
+                      "message_base": "Deploying service"
+                    },
+                    {
+                      "name": "wait",
+                      "status": "SUCCESS",
+                      "started_at": "0001-01-01T00:00:00Z",
+                      "ended_at": "0001-01-01T00:00:00Z",
+                      "component_name": "web",
+                      "message_base": "Waiting for service"
+                    }
+                  ],
+                  "started_at": "0001-01-01T00:00:00Z",
+                  "ended_at": "0001-01-01T00:00:00Z",
+                  "component_name": "web"
+                }
+              ],
+              "started_at": "2021-07-21T21:48:43.234527628Z",
+              "ended_at": "2021-07-21T21:49:04.971628049Z"
+            },
+            {
+              "name": "finalize",
+              "status": "SUCCESS",
+              "started_at": "2021-07-21T21:49:05.016891179Z",
+              "ended_at": "2021-07-21T21:49:07.146845266Z"
+            }
+          ],
+          "started_at": "2021-07-21T21:48:42.969045812Z",
+          "ended_at": "2021-07-21T21:49:07.146946671Z"
+        }
+      ]
+    },
+    "phase": "ACTIVE",
+    "tier_slug": "basic"
+  }
+]

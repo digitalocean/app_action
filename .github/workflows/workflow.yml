@@ -43,7 +43,9 @@ jobs:
       run: |
         go vet .
         golint .
-    
+    # Run build of the application
+    - name: Run build
+      run: go build . 
     # Run testing on the code
     - name: Run testing
       run: go test -v

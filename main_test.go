@@ -1,22 +1,72 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/digitalocean/godo"
 	"gopkg.in/yaml.v2"
 )
 
-func TestGetAllRepo(t *testing.T) {
+type MockDoctlDependencies struct {
+	dep doctlDependencies
+}
 
+func (m *MockDoctlDependencies) isAuthenticated(name string, token string) error {
+	return nil
+}
+func (m *MockDoctlDependencies) isDeployed(appID string) error {
+	fmt.Println("Build successful")
+	return nil
+}
+func (m *MockDoctlDependencies) getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
+	if strings.TrimSpace(input) == "" {
+		appID, err := m.retrieveAppID(appName)
+		if err != nil {
+			return nil, err
+		}
+		err = m.isDeployed(appID)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	}
+	var allRepos []UpdatedRepo
+	err := json.Unmarshal([]byte(input), &allRepos)
+	if err != nil {
+		return nil, errors.New("error in parsing json data from file")
+	}
+	return allRepos, nil
+}
+func (m *MockDoctlDependencies) retrieveActiveDeployment(appID string) ([]byte, error) {
+
+	output, err := ioutil.ReadFile("/testdata/temp")
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
+}
+
+func (m *MockDoctlDependencies) updateAppPlatformAppSpec(appID string, appSpec string) error {
+	return nil
+}
+func (m *MockDoctlDependencies) retrieveAppID(name string) (string, error) {
+	return "5e6b7bd1-d04e-4694-8679-bf8651f72663", nil
+}
+func TestGetAllRepo(t *testing.T) {
 	temp := `[ {
 		"name": "frontend",
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	allRepos, err := getAllRepo(temp, "_")
+
+	var test1Interface doctlDependencies
+	t1 := MockDoctlDependencies{test1Interface}
+	allRepos, err := t1.getAllRepo(temp, "_")
 	if err != nil {
 		t.Errorf("Error in parsing input json data")
 	}
@@ -26,14 +76,14 @@ func TestGetAllRepo(t *testing.T) {
 		t.Errorf("Error in unmarshal")
 	}
 	//testing individual deployment for get all repo
-	_, err = getAllRepo("", os.Getenv("TEST_APP_NAME"))
+	_, err = t1.getAllRepo("", "TEST_APP_NAME")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 }
 
 func TestCheckForGitAndDockerHub(t *testing.T) {
-	testInput, err := ioutil.ReadFile("sample-golang.yaml")
+	testInput, err := ioutil.ReadFile("testdata/sample-golang.yaml")
 	if err != nil {
 		t.Errorf("error in reading test file")
 	}
@@ -50,7 +100,9 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	allRepos, err := getAllRepo(temp, "_")
+	var test2Interface doctlDependencies
+	t2 := MockDoctlDependencies{test2Interface}
+	allRepos, err := t2.getAllRepo(temp, "_")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -85,7 +137,9 @@ func TestFilterApps(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	allRepos, err := getAllRepo(temp, "_")
+	var test2Interface doctlDependencies
+	t3 := MockDoctlDependencies{test2Interface}
+	allRepos, err := t3.getAllRepo(temp, "_")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -105,13 +159,25 @@ func TestFilterApps(t *testing.T) {
 		t.Errorf("error in filterApps")
 	}
 }
-func TestRetrieveAppID(t *testing.T) {
-	appID, err := retrieveAppID("sample-golang")
-	if appID == "" || err != nil {
-		t.Errorf("Error in retrieving appid")
-	}
-	_, err = retrieveAppID("sadasfasfsa")
-	if err == nil {
-		t.Errorf("Not able to handle invalid name")
-	}
-}
+
+// func TestRetrieveAppID(t *testing.T) {
+// 	var test2Interface doctlDependencies
+// 	t4 := DoctlServices{test2Interface}
+// 	appID, err := t4.retrieveAppID("sample-golang")
+// 	if appID == "" || err != nil {
+// 		t.Errorf("Error in retrieving appid")
+// 	}
+// 	_, err = t4.retrieveAppID("sadasfasfsa")
+// 	if err == nil {
+// 		t.Errorf("Not able to handle invalid name")
+// 	}
+// }
+
+// func TestIsAuthenticated(t *testing.T) {
+// 	var test2Interface doctlDependencies
+// 	t2 := DoctlServices{test2Interface}
+// 	err := t2.isAuthenticated(os.Getenv("TOKEN"))
+// 	if err != nil {
+// 		t.Errorf("Error in isAuthenticated %s", err)
+// 	}
+// }

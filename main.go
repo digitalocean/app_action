@@ -32,6 +32,7 @@ type doctlDependencies interface {
 	retrieveAppID(appName string) (string, error)
 	isDeployed(appID string) error
 	updateAppPlatformApp(appID string) error
+	isAuthenticated(token string) error
 }
 type DoctlServices struct {
 	dep doctlDependencies
@@ -42,7 +43,7 @@ func main() {
 	var dependent doctlDependencies
 	d := DoctlServices{dep: dependent}
 	//user authentication
-	err := d.isAuthenticated(os.Args[2], os.Args[3])
+	err := d.isAuthenticated(os.Args[3])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +56,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(string(appID))
 
 	//retrieve id of active deployment
 	apps, err := d.retrieveActiveDeployment(appID)
@@ -101,12 +101,11 @@ func main() {
 }
 
 //isAuthenticated checks for authentication
-func (d *DoctlServices) isAuthenticated(name string, token string) error {
+func (d *DoctlServices) isAuthenticated(token string) error {
 
-	temp := fmt.Sprintf("doctl auth init --access-token %s", token)
-	_, err := exec.Command("sh", "-c", temp).Output()
+	val, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", token)).Output()
 	if err != nil {
-		return errors.New("unable to authenticate user")
+		return errors.New(fmt.Sprintf("unable to authenticate user: %s", val))
 	}
 	return nil
 }
@@ -138,7 +137,7 @@ func (d *DoctlServices) isDeployed(appID string) error {
 	return nil
 }
 
-//retriveActiveDeployment retrieves currently deployed app spec of on App Platform app
+//retrieveActiveDeployment retrieves currently deployed app spec of on App Platform app
 func (d *DoctlServices) retrieveActiveDeployment(appID string) ([]byte, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get --format ActiveDeployment.ID --no-header %s", appID))
 	deployID, err := cmd.Output()

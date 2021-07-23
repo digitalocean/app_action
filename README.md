@@ -1,7 +1,7 @@
 # DigitalOcean App Platform Image and DigitalOcean Container Registry publish
 This action can be used to deploy to digitalocean [app platform](https://www.digitalocean.com/products/app-platform/) using github action. Read digitalocean AppSpec to get better insight into the internal working for App Platform [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
 # Usage
-### DigitalOean App Platform redeploy with same app spec.
+### DigitalOcean App Platform redeploy with same app spec.
 
 Add this step to deploy your application on DigitalOcean App Platform without changing any app spec configuration or making any other changes.
 ```yaml
@@ -36,7 +36,7 @@ Add this step to update single or multiple Digital Ocean Container Registry of e
                     ]'
 ```
 Digitalocean App Platform will now update your DOCR information in App Spec and then deploy your application.
-(Please use unique tag value for DigitalOcean Container Registy Push instead of latest)
+(Please use unique tag value for DigitalOcean Container Registry Push instead of latest)
 
 # Inputs
 - `app_name` - Name of the app on App Platform.
@@ -49,7 +49,7 @@ Digitalocean App Platform will now update your DOCR information in App Spec and 
     }
     ```
     ##### name is the name of the component in [App Spec]https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
-    ##### repostory is the name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
+    ##### repository is the name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
     ##### tag is the tag of the image provided while pushing to docr(by default its latest tag. We suggest always use unique tag value for any deployment)
 - `token` - doctl authentication token (generate token by following https://docs.digitalocean.com/reference/api/create-personal-access-token/)
 

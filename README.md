@@ -8,7 +8,7 @@ Add this step to deploy your application on DigitalOcean App Platform without ch
 - name: DigitalOcean App Platform deployment
   uses: ParamPatel207/app_action@main
   with:
-    app_name: 
+    app_name: my_DO_app
     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 ```
 DigitalOcean App Platform will now deploy your application.
@@ -20,7 +20,7 @@ Add this step to update single or multiple DigitalOcean Container Registry of ea
 - name: DigitalOcean App Platform deployment
   uses: ParamPatel207/app_action@main
   with:
-    app_name: 
+    app_name: my_DO_app
     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
     list_of_image: '[
                       {
@@ -51,7 +51,7 @@ DigitalOcean App Platform will now update your DOCR information in App Spec and 
     - `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
     - `repository` - name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
     - `tag` - tag of the image provided while pushing to docr(by default its latest tag. We suggest always use unique tag value for any deployment)
-- `token` - doctl authentication token (generate token by following https://docs.digitalocean.com/reference/api/create-personal-access-token/)
+- `token` - doctl authentication token (generate token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
 
 ## Example:
 

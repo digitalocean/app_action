@@ -12,7 +12,7 @@ inputs:
     description: digitalocean doctl auth token
     required: true
   list_of_image:
-    description: list of json object containing name, repository and tag of the digitalocean container registry to update
+    description: a json array of objects with the properties: name (description), repository (repo url), tag (image tag)
     required: false
     default: ""
 

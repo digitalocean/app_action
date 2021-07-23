@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/digitalocean/godo"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -39,7 +39,6 @@ type DoctlServices struct {
 }
 
 func main() {
-
 	var dependent doctlDependencies
 	d := DoctlServices{dep: dependent}
 	//user authentication
@@ -72,7 +71,7 @@ func main() {
 	//updates all the docr images based on user input
 	newErr := filterApps(input, appSpec)
 	if newErr.name != "" {
-		log.Fatal(newErr.name)
+		log.Print(newErr.name)
 		if len(newErr.notFound) != 0 {
 			log.Fatalf("%v", newErr.notFound)
 		}
@@ -102,7 +101,6 @@ func main() {
 
 //isAuthenticated checks for authentication
 func (d *DoctlServices) isAuthenticated(token string) error {
-
 	val, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", token)).Output()
 	if err != nil {
 		return fmt.Errorf("unable to authenticate user: %s", val)
@@ -118,12 +116,12 @@ func (d *DoctlServices) isDeployed(appID string) error {
 		cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
 		spec, err := cmd.Output()
 		if err != nil {
-			return errors.New("error in retrieving list of deployments")
+			return errors.Wrap(err, "error in retrieving list of deployments")
 		}
 		var app []godo.Deployment
 		err = json.Unmarshal(spec, &app)
 		if err != nil {
-			return errors.New("error in parsing deployment")
+			return errors.Wrap(err, "error in parsing deployment")
 		}
 		if app[0].Phase == "ACTIVE" {
 			fmt.Println("Build successful")
@@ -131,7 +129,7 @@ func (d *DoctlServices) isDeployed(appID string) error {
 		}
 		if app[0].Phase == "Failed" {
 			fmt.Println("Build unsuccessful")
-			return errors.New("build unsuccessful")
+			return errors.Wrap(err, "build unsuccessful")
 		}
 	}
 	return nil
@@ -142,7 +140,7 @@ func (d *DoctlServices) retrieveActiveDeployment(appID string) ([]byte, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get --format ActiveDeployment.ID --no-header %s", appID))
 	deployID, err := cmd.Output()
 	if err != nil {
-		return nil, errors.New("unable to retrieve active deployment")
+		return nil, errors.Wrap(err, "unable to retrieve active deployment")
 	}
 	deploymentID := strings.TrimSpace(string(deployID))
 
@@ -150,7 +148,7 @@ func (d *DoctlServices) retrieveActiveDeployment(appID string) ([]byte, error) {
 	cmd = exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
 	apps, err := cmd.Output()
 	if err != nil {
-		return nil, errors.New("error in retrieving currently deployed app id")
+		return nil, errors.Wrap(err, "error in retrieving currently deployed app id")
 	}
 	return apps, nil
 }
@@ -161,21 +159,20 @@ func (d *DoctlServices) updateAppPlatformAppSpec(appID string) error {
 	_, err := cmd.Output()
 	if err != nil {
 		fmt.Print(err)
-		return errors.New("unable to update app")
+		return errors.Wrap(err, "unable to update app")
 	}
 
 	cmd = exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
 	_, err = cmd.Output()
 	if err != nil {
-		return errors.New("unable to create-deployment for app")
+		return errors.Wrap(err, "unable to create-deployment for app")
 	}
 	return nil
 }
 
 // getAllRepo reads the file and return json object of type UpdatedRepo
 func (d *DoctlServices) getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
-
-	//takes care of empty input for  Deployment
+	//takes care of empty input for Deployment
 	if strings.TrimSpace(string(input)) == "" {
 		appID, err := d.retrieveAppID(appName)
 		if err != nil {
@@ -184,7 +181,7 @@ func (d *DoctlServices) getAllRepo(input string, appName string) ([]UpdatedRepo,
 		cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
 		_, err = cmd.Output()
 		if err != nil {
-			return nil, errors.New("unable to create-deployment for app")
+			return nil, errors.Wrap(err, "unable to create-deployment for app")
 		}
 		error := d.isDeployed(appID)
 		if error != nil {
@@ -198,7 +195,7 @@ func (d *DoctlServices) getAllRepo(input string, appName string) ([]UpdatedRepo,
 	var allRepos []UpdatedRepo
 	err := json.Unmarshal([]byte(input), &allRepos)
 	if err != nil {
-		return nil, errors.New("error in parsing json data from file")
+		return nil, errors.Wrap(err, "error in parsing json data from file")
 	}
 	return allRepos, nil
 }
@@ -307,14 +304,14 @@ func (d *DoctlServices) retrieveAppID(appName string) (string, error) {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
-		return "", errors.New("unable to get user app data from digitalocean")
+		return "", errors.Wrap(err, "unable to get user app data from digitalocean")
 	}
 
 	//parsing incoming data for AppId
 	var arr []godo.App
 	err = json.Unmarshal(apps, &arr)
 	if err != nil {
-		return "", errors.New("error in parsing data for AppId")
+		return "", errors.Wrap(err, "error in parsing data for AppId")
 	}
 	var appID string
 
@@ -325,7 +322,7 @@ func (d *DoctlServices) retrieveAppID(appName string) (string, error) {
 		}
 	}
 	if appID == "" {
-		return "", errors.New("app not found")
+		return "", errors.Wrap(err, "app not found")
 	}
 
 	return appID, nil

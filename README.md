@@ -60,9 +60,9 @@ Sample golang application for deployment with docr update. [example](https://git
 Sample golang application for redeployment. [example](https://github.com/ParamPatel207/app_action/tree/go_attempt/sample-golang)
 
 ## Resources to know more about DigitalOcean App Platform App Spec
-- [Guided App Spec Declaration](https://www.digitalocean.com/community/tech_talks/defining-your-app-specification-on-digitalocean-app-platform)
-- [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
-- [App Spec Components](https://www.digitalocean.com/blog/build-component-based-apps-with-digitalocean-app-platform/)
+- [App Platform Guided App Spec Declaration](https://www.digitalocean.com/community/tech_talks/defining-your-app-specification-on-digitalocean-app-platform)
+- [App Platform App Spec Blog](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+- [App Platform App Spec Components](https://www.digitalocean.com/blog/build-component-based-apps-with-digitalocean-app-platform/)
 ## Contributing
 
 

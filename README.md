@@ -1,63 +1,67 @@
-# DigitalOcean App Platform Image and DigitalOcean Registry publish
-This action can be either used to deploy to digitalocean app platform using github action or can be used to update docr images in digitalocean app platform App Spec.(https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+# DigitalOcean App Platform Image and DigitalOcean Container Registry publish
+This action can be used to deploy to digitalocean [app platform](https://www.digitalocean.com/products/app-platform/) using github action. Read digitalocean AppSpec to get better insight into the internal working for App Platform [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
 # Usage
-Add this step to deploy your application on DigitalOcean App Platform using DigitalOcean Container Registry.
+###DigitalOean App Platform redeploy with same app spec.
 
-### Example:
-
-Below example shows deployment to App Platform while updating Digital Ocean App Spec with update digitalocean container registry.
+Add this step to deploy your application on DigitalOcean App Platform without changing any app spec configuration or making any other changes.
 ```yaml
-    - name: DigitalOcean App Platform deployment
-      uses: ParamPatel207/app_action@go_attempt
-      with:
-        app_name: App Platform Demo
-        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-        list_of_image: '[
+- name: DigitalOcean App Platform deployment
+  uses: ParamPatel207/app_action@go_attempt
+  with:
+    app_name: 
+    token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+```
+Digitalocean App Platform will now deploy your application.
+
+###Update DigitalOcean Container Registry of multiple component in App Spec
+
+Add this step to update single or multiple Digital Ocean Container Registry of each component in app_spec
+```yaml
+- name: DigitalOcean App Platform deployment
+  uses: ParamPatel207/app_action@go_attempt
+  with:
+    app_name: 
+    token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+    list_of_image: '[
                           {
-                            "name": "frontend",
-                            "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-                            "tag": "latest"
+                            "name": " ",
+                            "repository": " ",
+                            "tag": ""
                           },
                           {
-                            "name": "landing",
-                            "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-                            "tag": "test1"
+                            "name": " ",
+                            "repository": " ",
+                            "tag": " "
                           },
-                          {
-                            "name": "api",
-                            "repository": "registry.digitalocean.com/<my-registry>/<my-image>",
-                            "tag": "test2"
-                          }
                         ]'
 ```
-Sample golang application for deployment with docr update is as follows: https://github.com/ParamPatel207/docr_sample
+Digitalocean App Platform will now update your DOCR information in App Spec and then deploy your application.
+(Please use unique tag value for DigitalOcean Container Registy Push instead of latest)
 
-
-
-Below example shows deployment to App Platform without updating the app spec.
-```yaml
-on:
-  push:
-    branches:
-      - master
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    name: Deploy App
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: DigitalOcean App Platform deployment
-      uses: ParamPatel207/app_action@go_attempt
-      with:
-        app_name: sample-golang
-        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-```
-Sample golang application for no docr update deployment is as follows: https://github.com/ParamPatel207/sample_golang_github_action
 # Inputs
 - `app_name` - Name of the app on App Platform.
 - `list_of_image` - (optional)List of json object for providing information about name,repository and tag of the image in docr.(By default tag of the image is latest)
-- `token` - doctl authentication token(generate token by following https://docs.digitalocean.com/reference/api/create-personal-access-token/)
+    ```json
+    {
+                            "name": " ",
+                            "repository": " ",
+                            "tag": ""
+                          }
+    ```
+    ####name is the name of the component in [App Spec]https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+    ####repostory is the name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
+    ####tag is the tag of the image provided while pushing to docr(by default its latest tag. We suggest always use unique tag value for any deployment)
+- `token` - doctl authentication token (generate token by following https://docs.digitalocean.com/reference/api/create-personal-access-token/)
+
+## Example:
+
+Sample golang application for deployment with docr update. [example](https://github.com/ParamPatel207/app_action/tree/go_attempt/docr_sample)
+
+Sample golang application for redeployment. [example](https://github.com/ParamPatel207/app_action/tree/go_attempt/sample-golang)
+
+## Contributing
+
+
 
 ## License
 

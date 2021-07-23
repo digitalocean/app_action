@@ -58,7 +58,6 @@ Digitalocean App Platform will now update your DOCR information in App Spec and 
 Sample golang application for deployment with docr update. [example](https://github.com/ParamPatel207/app_action/tree/go_attempt/docr_sample)
 
 Sample golang application for redeployment. [example](https://github.com/ParamPatel207/app_action/tree/go_attempt/sample-golang)
- d
 ## Contributing
 
 

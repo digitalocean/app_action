@@ -12,7 +12,7 @@ inputs:
     description: digitalocean doctl auth token
     required: true
   list_of_image:
-    description: a json array of objects with the properties: name (description), repository (repo url), tag (image tag)
+    description: a json array of objects with the properties name (description), repository (repo url), tag (image tag)
     required: false
     default: ""
 

@@ -6,7 +6,7 @@ This action can be used to deploy to digitalocean [app platform](https://www.dig
 Add this step to deploy your application on DigitalOcean App Platform without changing any app spec configuration or making any other changes.
 ```yaml
 - name: DigitalOcean App Platform deployment
-  uses: ParamPatel207/app_action@go_attempt
+  uses: ParamPatel207/app_action@main
   with:
     app_name: 
     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -18,7 +18,7 @@ Digitalocean App Platform will now deploy your application.
 Add this step to update single or multiple Digital Ocean Container Registry of each component in app_spec
 ```yaml
 - name: DigitalOcean App Platform deployment
-  uses: ParamPatel207/app_action@go_attempt
+  uses: ParamPatel207/app_action@main
   with:
     app_name: 
     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -48,9 +48,9 @@ Digitalocean App Platform will now update your DOCR information in App Spec and 
       "tag": ""
     }
     ```
-    ##### `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
-    ##### `repository` - name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
-    ##### `tag` - tag of the image provided while pushing to docr(by default its latest tag. We suggest always use unique tag value for any deployment)
+    `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+    `repository` - name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
+    `tag` - tag of the image provided while pushing to docr(by default its latest tag. We suggest always use unique tag value for any deployment)
 - `token` - doctl authentication token (generate token by following https://docs.digitalocean.com/reference/api/create-personal-access-token/)
 
 ## Example:

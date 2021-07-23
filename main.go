@@ -105,7 +105,7 @@ func (d *DoctlServices) isAuthenticated(token string) error {
 
 	val, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", token)).Output()
 	if err != nil {
-		return errors.New(fmt.Sprintf("unable to authenticate user: %s", val))
+		return fmt.Errorf("unable to authenticate user: %s", val)
 	}
 	return nil
 }

@@ -1,5 +1,5 @@
 # DigitalOcean App Platform Image and DigitalOcean Container Registry publish
-This action can be used to deploy to digitalocean [app platform](https://www.digitalocean.com/products/app-platform/) using github action. Read digitalocean AppSpec to get better insight into the internal working of App Platform [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+This action can be used to redeploy application on the App Platform of the DigitalOcean [app platform](https://www.digitalocean.com/products/app-platform/) using github action. This Action basically has two use cases one is to redeploy your application on App Platform with same configuration. The other use case is to update the DigitalOcean Container Registry configuration and deploy to App Platform. This github action uses DigitalOcean AppSpec [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/).
 # Usage
 ### DigitalOcean App Platform redeploy with same app spec.
 
@@ -11,11 +11,11 @@ Add this step to deploy your application on DigitalOcean App Platform without ch
     app_name: 
     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 ```
-Digitalocean App Platform will now deploy your application.
+DigitalOcean App Platform will now deploy your application.
 
 ### Update DigitalOcean Container Registry of multiple component in App Spec
 
-Add this step to update single or multiple Digital Ocean Container Registry of each component in app_spec
+Add this step to update single or multiple DigitalOcean Container Registry of each component in app_spec
 ```yaml
 - name: DigitalOcean App Platform deployment
   uses: ParamPatel207/app_action@main
@@ -35,7 +35,7 @@ Add this step to update single or multiple Digital Ocean Container Registry of e
                       },
                     ]'
 ```
-Digitalocean App Platform will now update your DOCR information in App Spec and then deploy your application.
+DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
 (Please use unique tag value for DigitalOcean Container Registry Push instead of latest)
 
 # Inputs

@@ -1,5 +1,5 @@
 # DigitalOcean App Platform Image and DigitalOcean Container Registry publish
-This action can be used to redeploy application on the App Platform of the DigitalOcean [app platform](https://www.digitalocean.com/products/app-platform/) using github action. This Action basically has two use cases one is to redeploy your application on App Platform with same configuration. The other use case is to update the DigitalOcean Container Registry configuration and deploy to App Platform. This github action uses DigitalOcean AppSpec [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/).
+This action can be used to redeploy application on the DigitalOcean's [App Platform](https://www.digitalocean.com/products/app-platform/) using github action. This Action basically has two use cases one is to redeploy your application on App Platform with same configuration. The other use case is to update the DigitalOcean Container Registry configuration and deploy to App Platform. This github action uses DigitalOcean AppSpec [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/).
 # Usage
 ### DigitalOcean App Platform redeploy with same app spec.
 

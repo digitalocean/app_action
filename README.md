@@ -1,5 +1,5 @@
 # DigitalOcean App Platform Image and DigitalOcean Container Registry publish
-This action can be used to deploy to digitalocean [app platform](https://www.digitalocean.com/products/app-platform/) using github action. Read digitalocean AppSpec to get better insight into the internal working for App Platform [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+This action can be used to deploy to digitalocean [app platform](https://www.digitalocean.com/products/app-platform/) using github action. Read digitalocean AppSpec to get better insight into the internal working of App Platform [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
 # Usage
 ### DigitalOcean App Platform redeploy with same app spec.
 
@@ -58,6 +58,11 @@ Digitalocean App Platform will now update your DOCR information in App Spec and 
 Sample golang application for deployment with docr update. [example](https://github.com/ParamPatel207/app_action/tree/go_attempt/docr_sample)
 
 Sample golang application for redeployment. [example](https://github.com/ParamPatel207/app_action/tree/go_attempt/sample-golang)
+
+## Resources to know more about DigitalOcean App Platform App Spec
+- [Guided App Spec Declaration](https://www.digitalocean.com/community/tech_talks/defining-your-app-specification-on-digitalocean-app-platform)
+- [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+- [App Spec Components](https://www.digitalocean.com/blog/build-component-based-apps-with-digitalocean-app-platform/)
 ## Contributing
 
 

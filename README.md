@@ -48,9 +48,9 @@ Digitalocean App Platform will now update your DOCR information in App Spec and 
       "tag": ""
     }
     ```
-    `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
-    `repository` - name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
-    `tag` - tag of the image provided while pushing to docr(by default its latest tag. We suggest always use unique tag value for any deployment)
+    - `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+    - `repository` - name of the DOCR repository with the following format registry.digitalocean.com/<my-registry>/<my-image>
+    - `tag` - tag of the image provided while pushing to docr(by default its latest tag. We suggest always use unique tag value for any deployment)
 - `token` - doctl authentication token (generate token by following https://docs.digitalocean.com/reference/api/create-personal-access-token/)
 
 ## Example:

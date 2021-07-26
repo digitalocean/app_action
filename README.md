@@ -3,7 +3,7 @@ This action can be used to redeploy application on the DigitalOcean's [App Platf
 # Usage
 ### DigitalOcean App Platform redeploy with same app spec.
 - (skip this step if you already have DigitalOcean Personal Access Token) Get DigitalOcean Personal Access token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
-- Declare DIGITALOCEAN_ACCESS_TOKEN in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 
+- Declare DigitalOcean Personal Access Token as DIGITALOCEAN_ACCESS_TOKEN variable in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 
 - Add this step to deploy your application on DigitalOcean App Platform without changing any app spec configuration or making any other changes.
   ```yaml
   - name: DigitalOcean App Platform deployment
@@ -16,7 +16,7 @@ This action can be used to redeploy application on the DigitalOcean's [App Platf
 
 ### Update DigitalOcean Container Registry of multiple component in App Spec
 - (skip this step if you already have DigitalOcean Personal Access Token) Get DigitalOcean Personal Access token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
-- Declare DIGITALOCEAN_ACCESS_TOKEN in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 
+- Declare DigitalOcean Personal Access Token as DIGITALOCEAN_ACCESS_TOKEN variable in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 
 - Add this step to update single or multiple DigitalOcean Container Registry of each component in app_spec
   ```yaml
   - name: DigitalOcean App Platform deployment

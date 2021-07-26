@@ -109,6 +109,7 @@ func (d *DoctlServices) isAuthenticated(token string) error {
 	return nil
 }
 
+//getCurrentDeployment returns the current deployment
 func (d *DoctlServices) getCurrentDeployment(appID string) ([]byte, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
 	spec, err := cmd.Output()
@@ -177,6 +178,8 @@ func (d *DoctlServices) updateAppPlatformAppSpec(appID string) error {
 	}
 	return nil
 }
+
+//createDeployments creates deployment for the app
 func (d *DoctlServices) createDeployments(appID string) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
 	_, err := cmd.Output()

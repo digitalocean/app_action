@@ -6,10 +6,10 @@ branding:
 
 inputs:
   app_name:
-    description: name of the app image
+    description: Name of the app to deploy
     required: true
   token:
-    description: digitalocean doctl auth token
+    description: digitalocean doctl authetentication token
     required: true
   list_of_image:
     description: a json array of objects with the properties name (description), repository (repo url), tag (image tag)

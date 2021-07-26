@@ -13,14 +13,14 @@ RUN export DOCTL_VERSION="$(curl https://github.com/digitalocean/doctl/releases/
     chmod +x /usr/local/bin/doctl
 # Build the Go app
 RUN go build -mod=vendor -o bin/app_action
-# -- Stage 2 -- #
-# Create the final environment with the compiled binary.
-FROM alpine
-# Install any required dependencies.
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-# Copy the binary from the builder stage and set it as the default command.
-COPY --from=builder /app/bin/app_action /usr/local/bin/
+# # -- Stage 2 -- #
+# # Create the final environment with the compiled binary.
+# FROM alpine
+# # Install any required dependencies.
+# RUN apk --no-cache add ca-certificates
+# WORKDIR /root/
+# # Copy the binary from the builder stage and set it as the default command.
+# COPY --from=builder /app/bin/app_action /usr/local/bin/
 
 # Command to run the executable
 ENTRYPOINT [ "app_action" ]

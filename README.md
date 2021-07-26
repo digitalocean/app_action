@@ -2,41 +2,43 @@
 This action can be used to redeploy application on the DigitalOcean's [App Platform](https://www.digitalocean.com/products/app-platform/) using github action. This Action has two use cases one is to redeploy your application on App Platform with same configuration. The other use case is to update the DigitalOcean Container Registry configuration and deploy to App Platform. This github action uses DigitalOcean AppSpec [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/).
 # Usage
 ### DigitalOcean App Platform redeploy with same app spec.
-
-Add this step to deploy your application on DigitalOcean App Platform without changing any app spec configuration or making any other changes.
-```yaml
-- name: DigitalOcean App Platform deployment
-  uses: ParamPatel207/app_action@main
-  with:
-    app_name: my_DO_app
-    token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-```
-DigitalOcean App Platform will now deploy your application.
+- (skip this step if you already have DigitalOcean Personal Access Token) Get DigitalOcean Personal Access token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
+- Declare DIGITALOCEAN_ACCESS_TOKEN in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 
+- Add this step to deploy your application on DigitalOcean App Platform without changing any app spec configuration or making any other changes.
+  ```yaml
+  - name: DigitalOcean App Platform deployment
+    uses: ParamPatel207/app_action@main
+    with:
+      app_name: my_DO_app
+      token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+  ```
+- DigitalOcean App Platform will now deploy your application.
 
 ### Update DigitalOcean Container Registry of multiple component in App Spec
-
-Add this step to update single or multiple DigitalOcean Container Registry of each component in app_spec
-```yaml
-- name: DigitalOcean App Platform deployment
-  uses: ParamPatel207/app_action@main
-  with:
-    app_name: my_DO_app
-    token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-    list_of_image: '[
-                      {
-                        "name": " ",
-                        "repository": " ",
-                        "tag": ""
-                      },
-                      {
-                        "name": " ",
-                        "repository": " ",
-                        "tag": " "
-                      },
-                    ]'
-```
-DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
-(Please use unique tag value for DigitalOcean Container Registry Push instead of latest)
+- (skip this step if you already have DigitalOcean Personal Access Token) Get DigitalOcean Personal Access token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
+- Declare DIGITALOCEAN_ACCESS_TOKEN in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 
+- Add this step to update single or multiple DigitalOcean Container Registry of each component in app_spec
+  ```yaml
+  - name: DigitalOcean App Platform deployment
+    uses: ParamPatel207/app_action@main
+    with:
+      app_name: my_DO_app
+      token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      list_of_image: '[
+                        {
+                          "name": " ",
+                          "repository": " ",
+                          "tag": ""
+                        },
+                        {
+                          "name": " ",
+                          "repository": " ",
+                          "tag": " "
+                        },
+                      ]'
+  ```
+- DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
+  (Please use unique tag value for DigitalOcean Container Registry Push instead of latest to avoid late push )
 
 # Inputs
 - `app_name` - Name of the app on App Platform.

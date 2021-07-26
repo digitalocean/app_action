@@ -34,6 +34,7 @@ type doctlDependencies interface {
 	updateAppPlatformApp(appID string) error
 	isAuthenticated(token string) error
 	createDeployments(appID string) error
+	retrieveFromDigitalocean() ([]byte, error)
 }
 type DoctlServices struct {
 	dep doctlDependencies
@@ -317,14 +318,23 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 
 }
 
-// retrieveAppID retrieves app id from app platform
-func (d *DoctlServices) retrieveAppID(appName string) (string, error) {
+//retrieveFromDigitalocean returns the app from digitalocean
+func (d *DoctlServices) retrieveFromDigitalocean() ([]byte, error) {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
-		return "", errors.Wrap(err, "unable to get user app data from digitalocean")
+		return nil, errors.Wrap(err, "unable to get user app data from digitalocean")
 	}
+	return apps, nil
 
+}
+
+// retrieveAppID retrieves app id from app platform
+func (d *DoctlServices) retrieveAppID(appName string) (string, error) {
+	apps, err := d.retrieveFromDigitalocean()
+	if err != nil {
+		return "", err
+	}
 	//parsing incoming data for AppId
 	var arr []godo.App
 	err = json.Unmarshal(apps, &arr)

@@ -38,7 +38,7 @@ This action can be used to redeploy application on the DigitalOcean's [App Platf
                       ]'
   ```
 - DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
-  (Please use unique tag value for DigitalOcean Container Registry Push instead of latest to avoid late push )
+  (Please use unique tag value for DigitalOcean Container Registry Push instead of latest to update DOCR update in App Spec)
 
 # Inputs
 - `app_name` - Name of the app on App Platform.

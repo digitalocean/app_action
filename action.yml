@@ -1,18 +1,18 @@
 name: DigitalOcean App Platform deployment
-description: Publish a Docker image to DigitalOcean's App Platform
+description: Deploy application to DigitalOcean's App Platform or Update DOCR image in the DigitalOcean's App Platform.
 branding:
   icon: 'upload-cloud'
   color: 'blue'
 
 inputs:
   app_name:
-    description: Name of the app to deploy
+    description: Name of the app. (The name of the app must be unique across all apps in the same account.)
     required: true
   token:
-    description: digitalocean doctl authetentication token
+    description: DigitalOcean Personal Access Token.(use https://docs.digitalocean.com/reference/api/create-personal-access-token/ for creating new token)
     required: true
   list_of_image:
-    description: a json array of objects with the properties name (description), repository (repo url), tag (image tag)
+    description: (OPTIONAL)a json array of objects with the properties name (description), repository (repo url), tag (image tag)
     required: false
     default: ""
 

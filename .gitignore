@@ -1,6 +1,4 @@
 .DS_Store
 .vscode/
 main
-test.yaml
-docr_sample/
-sample
+tmp.yml

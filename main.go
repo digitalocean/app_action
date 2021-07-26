@@ -33,6 +33,7 @@ type doctlDependencies interface {
 	isDeployed(appID string) error
 	updateAppPlatformApp(appID string) error
 	isAuthenticated(token string) error
+	createDeployments(appID string) error
 }
 type DoctlServices struct {
 	dep doctlDependencies
@@ -108,13 +109,22 @@ func (d *DoctlServices) isAuthenticated(token string) error {
 	return nil
 }
 
+func (d *DoctlServices) getCurrentDeployment(appID string) ([]byte, error) {
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
+	spec, err := cmd.Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "error in retrieving list of deployments")
+	}
+	return spec, nil
+
+}
+
 //isDeployed checks for the status of deployment
 func (d *DoctlServices) isDeployed(appID string) error {
 	done := false
 	for !done {
 		fmt.Println("App Platform is Building ....")
-		cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
-		spec, err := cmd.Output()
+		spec, err := d.getCurrentDeployment(appID)
 		if err != nil {
 			return errors.Wrap(err, "error in retrieving list of deployments")
 		}
@@ -161,9 +171,15 @@ func (d *DoctlServices) updateAppPlatformAppSpec(appID string) error {
 		fmt.Print(err)
 		return errors.Wrap(err, "unable to update app")
 	}
-
-	cmd = exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
-	_, err = cmd.Output()
+	err = d.createDeployments(appID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (d *DoctlServices) createDeployments(appID string) error {
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
+	_, err := cmd.Output()
 	if err != nil {
 		return errors.Wrap(err, "unable to create-deployment for app")
 	}
@@ -178,10 +194,9 @@ func (d *DoctlServices) getAllRepo(input string, appName string) ([]UpdatedRepo,
 		if err != nil {
 			return nil, err
 		}
-		cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
-		_, err = cmd.Output()
+		err = d.createDeployments(appID)
 		if err != nil {
-			return nil, errors.Wrap(err, "unable to create-deployment for app")
+			return nil, err
 		}
 		error := d.isDeployed(appID)
 		if error != nil {

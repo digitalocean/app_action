@@ -23,4 +23,4 @@ RUN go build -mod=vendor -o bin/app_action
 # COPY --from=builder /app/bin/app_action /usr/local/bin/
 
 # Command to run the executable
-ENTRYPOINT [ "app_action" ]
+ENTRYPOINT [ "bin/app_action" ]

@@ -13,7 +13,7 @@ import (
 )
 
 type MockDoctlDependencies struct {
-	dep doctlDependencies
+	dep DoctlDependencies
 }
 
 func (m *MockDoctlDependencies) isAuthenticated(name string, token string) error {
@@ -64,7 +64,7 @@ func TestGetAllRepo(t *testing.T) {
 		"tag": "latest"
 	  }]`
 
-	var test1Interface doctlDependencies
+	var test1Interface DoctlDependencies
 	t1 := MockDoctlDependencies{test1Interface}
 	allRepos, err := t1.getAllRepo(temp, "_")
 	if err != nil {
@@ -100,7 +100,7 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	var test2Interface doctlDependencies
+	var test2Interface DoctlDependencies
 	t2 := MockDoctlDependencies{test2Interface}
 	allRepos, err := t2.getAllRepo(temp, "_")
 	if err != nil {
@@ -137,7 +137,7 @@ func TestFilterApps(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	var test2Interface doctlDependencies
+	var test2Interface DoctlDependencies
 	t3 := MockDoctlDependencies{test2Interface}
 	allRepos, err := t3.getAllRepo(temp, "_")
 	if err != nil {

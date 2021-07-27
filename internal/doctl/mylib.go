@@ -114,7 +114,7 @@ func (d *DoctlServices) RetrieveFromDigitalocean() ([]byte, error) {
 
 // RetrieveAppID takes unique appName as an input and retrieves app id from app platform based on the users unique app name
 func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
-	apps, err := d.dep.RetrieveFromDigitalocean()
+	apps, err := d.RetrieveFromDigitalocean()
 	if err != nil {
 		return "", err
 	}
@@ -145,7 +145,7 @@ func (d *DoctlServices) IsDeployed(appID string) error {
 	done := false
 	for !done {
 		fmt.Println("App Platform is Building ....")
-		spec, err := d.dep.GetCurrentDeployment(appID)
+		spec, err := d.GetCurrentDeployment(appID)
 		if err != nil {
 			return errors.Wrap(err, "error in retrieving list of deployments")
 		}
@@ -169,15 +169,15 @@ func (d *DoctlServices) IsDeployed(appID string) error {
 //ReDeploy This function then checks if the input is empty and if it is then deploys the app using the existing appSpec
 func (d *DoctlServices) ReDeploy(input string, appName string) error {
 	if strings.TrimSpace(string(input)) == "" {
-		appID, err := d.dep.RetrieveAppID(appName)
+		appID, err := d.RetrieveAppID(appName)
 		if err != nil {
 			return err
 		}
-		err = d.dep.CreateDeployments(appID)
+		err = d.CreateDeployments(appID)
 		if err != nil {
 			return err
 		}
-		err = d.dep.IsDeployed(appID)
+		err = d.IsDeployed(appID)
 		if err != nil {
 			return err
 		}

@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ParamPatel207/app_action/internal/doctl/mylib"
+	mylib "github.com/ParamPatel207/app_action/internal/doctl"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
@@ -19,13 +19,31 @@ type AllError struct {
 	name     string
 	notFound []string
 }
+type DoctlDependencies interface {
+	IsAuthenticated(token string) error
+	GetCurrentDeployment(appID string) ([]byte, error)
+	RetrieveActiveDeploymentID(appID string) (string, error)
+	RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error)
+	UpdateAppPlatformAppSpec(appID string) error
+	CreateDeployments(appID string) error
+	RetrieveFromDigitalocean() ([]byte, error)
+	RetrieveAppID(appName string) (string, error)
+	IsDeployed(appID string) error
+	ReDeploy(input string, appName string) error
+}
+
+//DoctlServices is a struct for holding doctl dependent functions
+type DoctlServices struct {
+	dep DoctlDependencies
+}
 
 func main() {
 	//declaring variables for command line arguments input
 	appName := os.Args[2]
 	listOfImage := os.Args[1]
 	authToken := os.Args[3]
-	d := mylib.DoctlServices{}
+	var dependent mylib.DoctlDependencies
+	d := mylib.DoctlServices{Dep: dependent}
 	if strings.TrimSpace(authToken) == "" {
 		log.Fatal("No auth token provided")
 	}
@@ -36,7 +54,7 @@ func main() {
 
 	//redeploying app with same app spec
 	if strings.TrimSpace(listOfImage) == "" {
-		err := d.dep.ReDeploy(listOfImage, appName)
+		err := d.Dep.ReDeploy(listOfImage, appName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -49,7 +67,7 @@ func main() {
 
 func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	//user authentication
-	err := d.dep.IsAuthenticated(authToken)
+	err := d.Dep.IsAuthenticated(authToken)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,19 +79,19 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	}
 
 	//retrieve AppID from users deployment
-	appID, err := d.RetrieveAppID(os.Args[2])
+	appID, err := d.Dep.RetrieveAppID(os.Args[2])
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//retrieve id of active deployment
-	deploymentID, err := d.RetrieveActiveDeploymentID(appID)
+	deploymentID, err := d.Dep.RetrieveActiveDeploymentID(appID)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//retrieve apps from deployment id
-	apps, err := d.RetrieveActiveDeployment(deploymentID, appID)
+	apps, err := d.Dep.RetrieveActiveDeployment(deploymentID, appID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -109,7 +127,7 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	}
 
 	//updates app spec of the app using the local temp file and update
-	err = d.UpdateAppPlatformAppSpec(appID)
+	err = d.dep.UpdateAppPlatformAppSpec(appID)
 	if err != nil {
 		log.Fatal(err)
 	}

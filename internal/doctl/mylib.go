@@ -26,7 +26,7 @@ type DoctlDependencies interface {
 
 //DoctlServices is a struct for holding doctl dependent functions
 type DoctlServices struct {
-	dep DoctlDependencies
+	Dep DoctlDependencies
 }
 
 //UpdatedRepo used for parsing json object of changed repo

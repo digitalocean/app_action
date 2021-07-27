@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ppparampatel207/app_action/mylib"
-
+	"github.com/ParamPatel207/app_action/internal/doctl/mylib"
 	"github.com/digitalocean/godo"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -21,16 +21,45 @@ type AllError struct {
 }
 
 func main() {
+	//declaring variables for command line arguments input
+	appName := os.Args[2]
+	listOfImage := os.Args[1]
+	authToken := os.Args[3]
 	d := mylib.DoctlServices{}
+	if strings.TrimSpace(authToken) == "" {
+		log.Fatal("No auth token provided")
+	}
+
+	if strings.TrimSpace(appName) == "" {
+		log.Fatal("No app name provided")
+	}
+
+	//redeploying app with same app spec
+	if strings.TrimSpace(listOfImage) == "" {
+		err := d.dep.ReDeploy(listOfImage, appName)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	//run functional logic of the code
+	run(appName, listOfImage, authToken, &d)
+
+}
+
+func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	//user authentication
-	err := d.IsAuthenticated(os.Args[3])
+	err := d.dep.IsAuthenticated(authToken)
 	if err != nil {
 		log.Fatal(err)
 	}
-	input, err := d.GetAllRepo(os.Args[1], os.Args[2])
+
+	//parse array of input objects
+	input, err := parseJsonInput(listOfImage, appName)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	//retrieve AppID from users deployment
 	appID, err := d.RetrieveAppID(os.Args[2])
 	if err != nil {
@@ -42,11 +71,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	//retrieve apps from deployment id
 	apps, err := d.RetrieveActiveDeployment(deploymentID, appID)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//parse array of Deployment objects
 	var app []godo.App
 	err = json.Unmarshal(apps, &app)
 	if err != nil {
@@ -63,21 +95,31 @@ func main() {
 		}
 		os.Exit(1)
 	}
+
+	//build yaml from the input json data
 	newYaml, err := yaml.Marshal(appSpec)
 	if err != nil {
 		log.Fatal("Error in building spec from json data")
 	}
-	//write to local file
+
+	//write to local temp file
 	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
 	if err != nil {
 		log.Fatal("Error in writing to yaml")
 	}
 
-	//updates app spec of the app and deploys it
+	//updates app spec of the app using the local temp file and update
 	err = d.UpdateAppPlatformAppSpec(appID)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//Create a new deployment from the updated app spec
+	err = d.dep.CreateDeployments(appID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	//checks for deployment status
 	err = d.IsDeployed(appID)
 	if err != nil {
@@ -119,6 +161,18 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		job.Image = nil
 	}
 
+}
+
+// parseJsonInput takes the array of json object as input and unique name of users app as appName
+//it parses the input and returns UpdatedRepo of the input
+func parseJsonInput(input string, appName string) ([]mylib.UpdatedRepo, error) {
+	//takes care of empty json Deployment (use case where we redeploy using same app spec)
+	var allRepos []mylib.UpdatedRepo
+	err := json.Unmarshal([]byte(input), &allRepos)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in parsing json data from file")
+	}
+	return allRepos, nil
 }
 
 // filterApps filters git and DockerHub apps and then updates app spec with DOCR

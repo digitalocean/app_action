@@ -3,7 +3,6 @@ package mylib
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -11,25 +10,33 @@ import (
 	"github.com/pkg/errors"
 )
 
+//DoctlDependencies interface for doctl dependent functions
 type DoctlDependencies interface {
-	RetrieveActiveDeployment(appID string) ([]byte, error)
-	UpdateAppPlatformAppSpec(appID string) error
 	IsAuthenticated(token string) error
 	GetCurrentDeployment(appID string) ([]byte, error)
+	RetrieveActiveDeploymentID(appID string) (string, error)
+	RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error)
+	UpdateAppPlatformAppSpec(appID string) error
 	CreateDeployments(appID string) error
 	RetrieveFromDigitalocean() ([]byte, error)
+	RetrieveAppID(appName string) (string, error)
+	IsDeployed(appID string) error
+	ReDeploy(input string, appName string) error
 }
+
+//DoctlServices is a struct for holding doctl dependent functions
 type DoctlServices struct {
 	dep DoctlDependencies
 }
 
-// UpdatedRepo used for parsing json object of changed repo
+//UpdatedRepo used for parsing json object of changed repo
 type UpdatedRepo struct {
 	Name       string
 	Repository string
 	Tag        string
 }
 
+//IsAuthenticated used for user authentication
 func (d *DoctlServices) IsAuthenticated(token string) error {
 	val, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", token)).Output()
 	if err != nil {
@@ -38,7 +45,7 @@ func (d *DoctlServices) IsAuthenticated(token string) error {
 	return nil
 }
 
-//getCurrentDeployment returns the current deployment
+//GetCurrentDeployment takes appID as input and returns list of deployments (used to retrieve most recent deployment)
 func (d *DoctlServices) GetCurrentDeployment(appID string) ([]byte, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
 	spec, err := cmd.Output()
@@ -49,7 +56,7 @@ func (d *DoctlServices) GetCurrentDeployment(appID string) ([]byte, error) {
 
 }
 
-//retrieveActiveDeploymentID retrieves currently deployed app spec of on App Platform app
+//RetrieveActiveDeploymentID takes appID as input and retrieves currently deploymentID of the active deployment of the app on App Platform
 func (d *DoctlServices) RetrieveActiveDeploymentID(appID string) (string, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get --format ActiveDeployment.ID --no-header %s", appID))
 	deployID, err := cmd.Output()
@@ -61,7 +68,8 @@ func (d *DoctlServices) RetrieveActiveDeploymentID(appID string) (string, error)
 
 }
 
-//retrieveActiveDeployment returns the active deployment from deplyment appID
+//RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and appID
+//returns the app spec from App Platform as []byte
 func (d *DoctlServices) RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
 	apps, err := cmd.Output()
@@ -71,7 +79,8 @@ func (d *DoctlServices) RetrieveActiveDeployment(deploymentID string, appID stri
 	return apps, nil
 }
 
-//updateAppPlatformAppSpec updates app spec and creates deployment for the app
+//UpdateAppPlatformAppSpec takes appID as input
+//This function updates App Platform's app spec and creates Deployment
 func (d *DoctlServices) UpdateAppPlatformAppSpec(appID string) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec .do._app.yaml", appID))
 	_, err := cmd.Output()
@@ -79,14 +88,10 @@ func (d *DoctlServices) UpdateAppPlatformAppSpec(appID string) error {
 		fmt.Print(err)
 		return errors.Wrap(err, "unable to update app")
 	}
-	err = d.CreateDeployments(appID)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
-//createDeployments creates deployment for the app
+//CreateDeployments takes appID as an input and creates deployment for the app
 func (d *DoctlServices) CreateDeployments(appID string) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
 	_, err := cmd.Output()
@@ -96,7 +101,7 @@ func (d *DoctlServices) CreateDeployments(appID string) error {
 	return nil
 }
 
-//retrieveFromDigitalocean returns the app from digitalocean
+//RetrieveFromDigitalocean returns the app from DigitalOcean as a slice of byte
 func (d *DoctlServices) RetrieveFromDigitalocean() ([]byte, error) {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
@@ -107,9 +112,9 @@ func (d *DoctlServices) RetrieveFromDigitalocean() ([]byte, error) {
 
 }
 
-// retrieveAppID retrieves app id from app platform
+// RetrieveAppID takes unique appName as an input and retrieves app id from app platform based on the users unique app name
 func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
-	apps, err := d.RetrieveFromDigitalocean()
+	apps, err := d.dep.RetrieveFromDigitalocean()
 	if err != nil {
 		return "", err
 	}
@@ -134,12 +139,13 @@ func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
 	return appID, nil
 }
 
-//isDeployed checks for the status of deployment
+//isDeployed takes appID as an input and checks for the status of the deployment
+//until the status is updated to Active deployment or failed
 func (d *DoctlServices) IsDeployed(appID string) error {
 	done := false
 	for !done {
 		fmt.Println("App Platform is Building ....")
-		spec, err := d.GetCurrentDeployment(appID)
+		spec, err := d.dep.GetCurrentDeployment(appID)
 		if err != nil {
 			return errors.Wrap(err, "error in retrieving list of deployments")
 		}
@@ -160,31 +166,23 @@ func (d *DoctlServices) IsDeployed(appID string) error {
 	return nil
 }
 
-// getAllRepo reads the file and return json object of type UpdatedRepo
-func (d *DoctlServices) GetAllRepo(input string, appName string) ([]UpdatedRepo, error) {
-	//takes care of empty input for Deployment
+//ReDeploy This function then checks if the input is empty and if it is then deploys the app using the existing appSpec
+func (d *DoctlServices) ReDeploy(input string, appName string) error {
 	if strings.TrimSpace(string(input)) == "" {
-		appID, err := d.RetrieveAppID(appName)
+		appID, err := d.dep.RetrieveAppID(appName)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		err = d.CreateDeployments(appID)
+		err = d.dep.CreateDeployments(appID)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		error := d.IsDeployed(appID)
-		if error != nil {
-			return nil, error
+		err = d.dep.IsDeployed(appID)
+		if err != nil {
+			return err
 		}
-		if error == nil {
-			os.Exit(0)
-		}
-		return nil, nil
+		return nil
 	}
-	var allRepos []UpdatedRepo
-	err := json.Unmarshal([]byte(input), &allRepos)
-	if err != nil {
-		return nil, errors.Wrap(err, "error in parsing json data from file")
-	}
-	return allRepos, nil
+	return errors.Errorf("Please provide valid json input")
+
 }

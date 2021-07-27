@@ -1,4 +1,4 @@
-module example.com/m
+module github.com/ParamPatel207/app_action
 
 go 1.16
 
@@ -8,4 +8,6 @@ require (
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	sigs.k8s.io/yaml v1.2.0
+	
+
 )

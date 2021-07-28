@@ -49,7 +49,6 @@ func main() {
 	}
 	//run functional logic of the code
 	run(appName, listOfImage, authToken, &d)
-
 }
 
 func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
@@ -143,7 +142,6 @@ func updateLocalAppSpec(listOfImage string, appName string, apps []byte) error {
 		return errors.Wrap(err, "Error in writing local yaml file")
 	}
 	return nil
-
 }
 
 // parseDeploymentSpec parses deployment array and retrieves appSpec of recent deployment
@@ -194,7 +192,6 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		job.GitHub = nil
 		job.Image = nil
 	}
-
 }
 
 // parseJsonInput takes the array of json object as input and unique name of users app as appName

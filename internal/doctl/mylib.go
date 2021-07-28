@@ -53,7 +53,6 @@ func (d *DoctlServices) GetCurrentDeployment(appID string) ([]byte, error) {
 		return nil, errors.Wrap(err, "error in retrieving list of deployments")
 	}
 	return spec, nil
-
 }
 
 //RetrieveActiveDeploymentID takes appID as input and retrieves currently deploymentID of the active deployment of the app on App Platform
@@ -65,7 +64,6 @@ func (d *DoctlServices) RetrieveActiveDeploymentID(appID string) (string, error)
 	}
 	deploymentID := strings.TrimSpace(string(deployID))
 	return deploymentID, nil
-
 }
 
 //RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and appID
@@ -109,7 +107,6 @@ func (d *DoctlServices) RetrieveFromDigitalocean() ([]byte, error) {
 		return nil, errors.Wrap(err, "unable to get user app data from digitalocean")
 	}
 	return apps, nil
-
 }
 
 // RetrieveAppID takes unique appName as an input and retrieves app id from app platform based on the users unique app name
@@ -125,7 +122,6 @@ func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
 		return "", errors.Wrap(err, "error in parsing data for AppId")
 	}
 	var appID string
-
 	for k := range arr {
 		if arr[k].Spec.Name == appName {
 			appID = arr[k].ID

@@ -17,7 +17,7 @@
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
   ```
-- DigitalOcean App Platform will now deploy your application.
+- This step will trigger a deploy to your App on DigitalOcean App Platform
 
 ### Update DigitalOcean Container Registry(DOCR) configuration of multiple component in App Spec
 

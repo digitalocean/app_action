@@ -56,7 +56,6 @@ func (d *DoctlServices) ListDeployments(appID string) ([]godo.Deployment, error)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in retrieving list of deployments")
 	}
-
 	var app []godo.Deployment
 	err = json.Unmarshal(spec, &app)
 	if err != nil {
@@ -125,6 +124,7 @@ func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	//parsing incoming data for AppId
 	var arr []godo.App
 	err = json.Unmarshal(apps, &arr)

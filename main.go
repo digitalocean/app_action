@@ -41,7 +41,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//run business logic of app_action
+	//run runs business logic of app_action
 	run(appName, images, authToken, &d)
 }
 
@@ -154,8 +154,6 @@ func parseAppSpecToYaml(appSpec *godo.AppSpec) ([]byte, error) {
 
 //writeToTempFile writes to a local temp file
 func writeToTempFile(newYaml []byte) (string, error) {
-
-	//write to local temp file
 	tmpfile, err := ioutil.TempFile("", "_do_app_*.yaml")
 	if err != nil {
 		return "", errors.Wrap(err, "Error in creating temp file")
@@ -167,7 +165,6 @@ func writeToTempFile(newYaml []byte) (string, error) {
 	if err := tmpfile.Close(); err != nil {
 		return "", errors.Wrap(err, "Error in closing temp file")
 	}
-	fmt.Println("file written")
 	return tmpfile.Name(), nil
 }
 

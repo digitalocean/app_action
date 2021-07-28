@@ -44,6 +44,7 @@
                       ]'
   ```
 - DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
+- This step will trigger a DigitalOcean App Platform deployment of your app using the images specified.
 
 **Note: Always use unique tag names to push image to the DigitalOcean Container Registry. This will allow you to deploy your application without delay. [ref](https://docs.digitalocean.com/products/container-registry/quickstart/)**
 

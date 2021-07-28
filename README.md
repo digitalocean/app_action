@@ -19,7 +19,7 @@
   ```
 - This step will trigger a deploy to your App on DigitalOcean App Platform
 
-### Update DigitalOcean Container Registry(DOCR) configuration of multiple component in App Spec
+### Deploy an one or more app components from a DigitalOcean Container Registry (DOCR) 
 
 - Get DigitalOcean Personal Access token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)**(skip this step if you already have DigitalOcean Personal Access Token)**
 - Declare DigitalOcean Personal Access Token as DIGITALOCEAN_ACCESS_TOKEN variable in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 

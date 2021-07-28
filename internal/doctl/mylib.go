@@ -24,7 +24,7 @@ type DoctlDependencies interface {
 	ReDeploy(input string, appName string) error
 }
 
-//DoctlServices is a struct for holding doctl dependent functions
+//DoctlServices is a struct for holding doctl dependent function interface
 type DoctlServices struct {
 	Dep DoctlDependencies
 }
@@ -55,7 +55,7 @@ func (d *DoctlServices) GetCurrentDeployment(appID string) ([]byte, error) {
 	return spec, nil
 }
 
-//RetrieveActiveDeploymentID takes appID as input and retrieves currently deploymentID of the active deployment of the app on App Platform
+//RetrieveActiveDeploymentID takes appID as input and retrieves currently deployment id of the active deployment of the app on App Platform
 func (d *DoctlServices) RetrieveActiveDeploymentID(appID string) (string, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get --format ActiveDeployment.ID --no-header %s", appID))
 	deployID, err := cmd.Output()
@@ -66,7 +66,7 @@ func (d *DoctlServices) RetrieveActiveDeploymentID(appID string) (string, error)
 	return deploymentID, nil
 }
 
-//RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and appID
+//RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and app id
 //returns the app spec from App Platform as []byte
 func (d *DoctlServices) RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
@@ -78,7 +78,7 @@ func (d *DoctlServices) RetrieveActiveDeployment(deploymentID string, appID stri
 }
 
 //UpdateAppPlatformAppSpec takes appID as input
-//This function updates App Platform's app spec and creates Deployment
+//updates App Platform's app spec and creates deployment
 func (d *DoctlServices) UpdateAppPlatformAppSpec(appID string) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec .do._app.yaml", appID))
 	_, err := cmd.Output()
@@ -89,7 +89,7 @@ func (d *DoctlServices) UpdateAppPlatformAppSpec(appID string) error {
 	return nil
 }
 
-//CreateDeployments takes appID as an input and creates deployment for the app
+//CreateDeployments takes app id as an input and creates deployment for the app
 func (d *DoctlServices) CreateDeployments(appID string) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
 	_, err := cmd.Output()
@@ -109,7 +109,7 @@ func (d *DoctlServices) RetrieveFromDigitalocean() ([]byte, error) {
 	return apps, nil
 }
 
-// RetrieveAppID takes unique appName as an input and retrieves app id from app platform based on the users unique app name
+// RetrieveAppID takes unique app name as an input and retrieves app id from app platform based on the users unique app name
 func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
 	apps, err := d.RetrieveFromDigitalocean()
 	if err != nil {
@@ -135,8 +135,8 @@ func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
 	return appID, nil
 }
 
-//isDeployed takes appID as an input and checks for the status of the deployment
-//until the status is updated to Active deployment or failed
+//isDeployed takes app id as an input and checks for the status of the deployment
+//until the status is updated to ACTIVE or failed
 func (d *DoctlServices) IsDeployed(appID string) error {
 	done := false
 	for !done {
@@ -162,7 +162,7 @@ func (d *DoctlServices) IsDeployed(appID string) error {
 	return nil
 }
 
-//ReDeploy This function then checks if the input is empty and if it is then deploys the app using the existing appSpec
+//ReDeploy redeploys app if user provides empty json file
 func (d *DoctlServices) ReDeploy(input string, appName string) error {
 	if strings.TrimSpace(string(input)) == "" {
 		appID, err := d.RetrieveAppID(appName)

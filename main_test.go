@@ -140,25 +140,3 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 	os.Remove(".do._app.yaml")
 
 }
-
-// func TestRetrieveAppID(t *testing.T) {
-// 	var test2Interface doctlDependencies
-// 	t4 := DoctlServices{test2Interface}
-// 	appID, err := t4.retrieveAppID("sample-golang")
-// 	if appID == "" || err != nil {
-// 		t.Errorf("Error in retrieving appid")
-// 	}
-// 	_, err = t4.retrieveAppID("sadasfasfsa")
-// 	if err == nil {
-// 		t.Errorf("Not able to handle invalid name")
-// 	}
-// }
-
-// func TestIsAuthenticated(t *testing.T) {
-// 	var test2Interface doctlDependencies
-// 	t2 := DoctlServices{test2Interface}
-// 	err := t2.isAuthenticated(os.Getenv("TOKEN"))
-// 	if err != nil {
-// 		t.Errorf("Error in isAuthenticated %s", err)
-// 	}
-// }

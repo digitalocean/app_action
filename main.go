@@ -30,7 +30,7 @@ func main() {
 	var dependent mylib.DoctlDependencies
 	d := mylib.DoctlServices{Dep: dependent}
 
-	//check for auth token
+	//check for authentication token
 	if strings.TrimSpace(authToken) == "" {
 		log.Fatal("No auth token provided")
 	}
@@ -40,17 +40,18 @@ func main() {
 		log.Fatal("No app name provided")
 	}
 
-	//redeploying app with same app spec
+	//redeploying app with the same app spec
 	if strings.TrimSpace(listOfImage) == "" {
 		err := d.ReDeploy(listOfImage, appName)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-	//run functional logic of the code
+	//run business logic of app_action
 	run(appName, listOfImage, authToken, &d)
 }
 
+//run contains business logic of app_action
 func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	//user authentication
 	err := d.IsAuthenticated(authToken)
@@ -58,13 +59,13 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 		log.Fatal(err)
 	}
 
-	//retrieve AppID from users deployment
+	//retrieve appID from users deployment
 	appID, err := d.RetrieveAppID(os.Args[2])
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//retrieve id of active deployment
+	//retrieve deployment id of active deployment
 	deploymentID, err := d.RetrieveActiveDeploymentID(appID)
 	if err != nil {
 		log.Fatal(err)
@@ -76,7 +77,7 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 		log.Fatal(err)
 	}
 
-	//update local app spec
+	//updates local app spec based on user input
 	err = updateLocalAppSpec(listOfImage, appName, apps)
 	if err != nil {
 		log.Fatal(err)
@@ -88,7 +89,7 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 		log.Fatal(err)
 	}
 
-	//Create a new deployment from the updated app spec
+	//creates a new deployment from the updated app spec
 	err = d.CreateDeployments(appID)
 	if err != nil {
 		log.Fatal(err)
@@ -107,6 +108,7 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	}
 }
 
+//updateLocalAppSpec updates app spec based on users input and saves it in a local file called .do._app.yaml
 func updateLocalAppSpec(listOfImage string, appName string, apps []byte) error {
 	//parse array of input objects
 	input, err := parseJsonInput(listOfImage, appName)
@@ -114,7 +116,7 @@ func updateLocalAppSpec(listOfImage string, appName string, apps []byte) error {
 		return err
 	}
 
-	//parse array of Deployment objects
+	//parse array of deployment objects
 	appSpec, err := parseDeploymentSpec(apps)
 	if err != nil {
 		return err
@@ -155,7 +157,7 @@ func parseDeploymentSpec(apps []byte) (*godo.AppSpec, error) {
 	return &appSpec, nil
 }
 
-// checkForGitAndDockerHub Remove git and DockerHub
+// checkForGitAndDockerHub removes git, gitlab, github, DockerHub and DOCR images for the app name specified in the input json file
 func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)

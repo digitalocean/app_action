@@ -128,11 +128,11 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 	}
 
 	//test for all functions which are independent of doctl
-	err = updateLocalAppSpec(t1Input, "sample_golang", testInput)
+	file, err := updateLocalAppSpec(t1Input, "sample_golang", testInput)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	f1, err1 := ioutil.ReadFile(".do._app.yaml")
+	f1, err1 := ioutil.ReadFile(file)
 	if err1 != nil {
 		log.Fatal(err1)
 	}
@@ -145,5 +145,5 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 	if bytes.Equal(f1, f2) == false {
 		t.Errorf("error in parsing app spec yaml file")
 	}
-	os.Remove(".do._app.yaml")
+	os.Remove(file)
 }

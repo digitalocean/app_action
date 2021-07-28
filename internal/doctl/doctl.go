@@ -1,4 +1,4 @@
-package mylib
+package doctl
 
 import (
 	"encoding/json"
@@ -12,11 +12,10 @@ import (
 
 //DoctlDependencies interface for doctl dependent functions
 type DoctlDependencies interface {
-	IsAuthenticated(token string) error
-	GetCurrentDeployment(appID string) ([]byte, error)
+	ListDeployments(appID string) ([]byte, error)
 	RetrieveActiveDeploymentID(appID string) (string, error)
 	RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error)
-	UpdateAppPlatformAppSpec(appID string) error
+	UpdateAppPlatformAppSpec(tmpfile, appID string) error
 	CreateDeployments(appID string) error
 	RetrieveFromDigitalocean() ([]byte, error)
 	RetrieveAppID(appName string) (string, error)
@@ -37,22 +36,33 @@ type UpdatedRepo struct {
 }
 
 //IsAuthenticated used for user authentication
-func (d *DoctlServices) IsAuthenticated(token string) error {
+func NewDoctlClient(token string) (DoctlServices, error) {
 	val, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", token)).Output()
 	if err != nil {
-		return fmt.Errorf("unable to authenticate user: %s", val)
+		return DoctlServices{}, fmt.Errorf("unable to authenticate user: %s", val)
 	}
-	return nil
+
+	//declaring interface for doctl functions
+	var dependent DoctlDependencies
+	d := DoctlServices{Dep: dependent}
+
+	return d, nil
 }
 
 //GetCurrentDeployment takes appID as input and returns list of deployments (used to retrieve most recent deployment)
-func (d *DoctlServices) GetCurrentDeployment(appID string) ([]byte, error) {
+func (d *DoctlServices) ListDeployments(appID string) ([]godo.Deployment, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
 	spec, err := cmd.Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "error in retrieving list of deployments")
 	}
-	return spec, nil
+
+	var app []godo.Deployment
+	err = json.Unmarshal(spec, &app)
+	if err != nil {
+		return nil, errors.Wrap(err, "error in parsing deployment")
+	}
+	return app, nil
 }
 
 //RetrieveActiveDeploymentID takes appID as input and retrieves currently deployment id of the active deployment of the app on App Platform
@@ -79,11 +89,11 @@ func (d *DoctlServices) RetrieveActiveDeployment(deploymentID string, appID stri
 
 //UpdateAppPlatformAppSpec takes appID as input
 //updates App Platform's app spec and creates deployment
-func (d *DoctlServices) UpdateAppPlatformAppSpec(appID string) error {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec .do._app.yaml", appID))
+func (d *DoctlServices) UpdateAppPlatformAppSpec(tmpfile, appID string) error {
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec %s", appID, tmpfile))
 	_, err := cmd.Output()
 	if err != nil {
-		fmt.Print(err)
+		fmt.Printf("doctl app update %s --spec %s", appID, tmpfile)
 		return errors.Wrap(err, "unable to update app")
 	}
 	return nil
@@ -140,14 +150,9 @@ func (d *DoctlServices) IsDeployed(appID string) error {
 	done := false
 	for !done {
 		fmt.Println("App Platform is Building ....")
-		spec, err := d.GetCurrentDeployment(appID)
+		app, err := d.ListDeployments(appID)
 		if err != nil {
 			return errors.Wrap(err, "error in retrieving list of deployments")
-		}
-		var app []godo.Deployment
-		err = json.Unmarshal(spec, &app)
-		if err != nil {
-			return errors.Wrap(err, "error in parsing deployment")
 		}
 		if app[0].Phase == "ACTIVE" {
 			fmt.Println("Build successful")

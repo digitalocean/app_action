@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	mylib "github.com/ParamPatel207/app_action/internal/doctl"
+	"github.com/ParamPatel207/app_action/internal/doctl"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
@@ -23,12 +23,8 @@ type AllError struct {
 func main() {
 	//declaring variables for command line arguments input
 	appName := os.Args[2]
-	listOfImage := os.Args[1]
+	images := os.Args[1]
 	authToken := os.Args[3]
-
-	//declaring interface for doctl functions
-	var dependent mylib.DoctlDependencies
-	d := mylib.DoctlServices{Dep: dependent}
 
 	//check for authentication token
 	if strings.TrimSpace(authToken) == "" {
@@ -40,23 +36,24 @@ func main() {
 		log.Fatal("No app name provided")
 	}
 
-	//redeploying app with the same app spec
-	if strings.TrimSpace(listOfImage) == "" {
-		err := d.ReDeploy(listOfImage, appName)
-		if err != nil {
-			log.Fatal(err)
-		}
+	//user authentication
+	d, err := doctl.NewDoctlClient(authToken)
+	if err != nil {
+		log.Fatal(err)
 	}
 	//run business logic of app_action
-	run(appName, listOfImage, authToken, &d)
+	run(appName, images, authToken, &d)
 }
 
 //run contains business logic of app_action
-func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
-	//user authentication
-	err := d.IsAuthenticated(authToken)
-	if err != nil {
-		log.Fatal(err)
+func run(appName, images, authToken string, d *doctl.DoctlServices) {
+
+	//redeploying app with the same app spec
+	if strings.TrimSpace(images) == "" {
+		err := d.ReDeploy(images, appName)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	//retrieve appID from users deployment
@@ -78,13 +75,13 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	}
 
 	//updates local app spec based on user input
-	err = updateLocalAppSpec(listOfImage, appName, apps)
+	tmpfile, err := updateLocalAppSpec(images, appName, apps)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//updates app spec of the app using the local temp file and update
-	err = d.UpdateAppPlatformAppSpec(appID)
+	err = d.UpdateAppPlatformAppSpec(tmpfile, appID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,24 +99,24 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	}
 
 	//deletes the local temp app spec file
-	err = os.Remove(".do._app.yaml")
+	err = os.Remove(tmpfile)
 	if err != nil {
 		log.Fatal(err, "Error in removing local file")
 	}
 }
 
 //updateLocalAppSpec updates app spec based on users input and saves it in a local file called .do._app.yaml
-func updateLocalAppSpec(listOfImage string, appName string, apps []byte) error {
+func updateLocalAppSpec(images string, appName string, apps []byte) (string, error) {
 	//parse array of input objects
-	input, err := parseJsonInput(listOfImage, appName)
+	input, err := parseJsonInput(images, appName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	//parse array of deployment objects
 	appSpec, err := parseDeploymentSpec(apps)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	//updates all the docr images based on user input
@@ -129,21 +126,49 @@ func updateLocalAppSpec(listOfImage string, appName string, apps []byte) error {
 		if len(newErr.notFound) != 0 {
 			log.Fatalf("%v", newErr.notFound)
 		}
-		return errors.New(newErr.name)
+		return "", errors.New(newErr.name)
 	}
 
-	//build yaml from the input json data
-	newYaml, err := yaml.Marshal(appSpec)
+	//parse App Spec to yaml
+	newYaml, err := parseAppSpecToYaml(appSpec)
 	if err != nil {
-		return errors.Wrap(err, "Error in building yaml")
+		return "", err
 	}
 
 	//write to local temp file
-	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
+	tmpfile, err := writeToTempFile(newYaml)
 	if err != nil {
-		return errors.Wrap(err, "Error in writing local yaml file")
+		return "", err
 	}
-	return nil
+	return tmpfile, nil
+}
+
+//parseJsonInput parses updated json file to yaml
+func parseAppSpecToYaml(appSpec *godo.AppSpec) ([]byte, error) {
+	newYaml, err := yaml.Marshal(appSpec)
+	if err != nil {
+		return nil, errors.Wrap(err, "Error in building yaml")
+	}
+	return newYaml, nil
+}
+
+//writeToTempFile writes to a local temp file
+func writeToTempFile(newYaml []byte) (string, error) {
+
+	//write to local temp file
+	tmpfile, err := ioutil.TempFile("", "_do_app_*.yaml")
+	if err != nil {
+		return "", errors.Wrap(err, "Error in creating temp file")
+	}
+	if _, err := tmpfile.Write(newYaml); err != nil {
+		tmpfile.Close()
+		return "", errors.Wrap(err, "Error in writing to temp file")
+	}
+	if err := tmpfile.Close(); err != nil {
+		return "", errors.Wrap(err, "Error in closing temp file")
+	}
+	fmt.Println("file written")
+	return tmpfile.Name(), nil
 }
 
 // parseDeploymentSpec parses deployment array and retrieves appSpec of recent deployment
@@ -158,7 +183,7 @@ func parseDeploymentSpec(apps []byte) (*godo.AppSpec, error) {
 }
 
 // checkForGitAndDockerHub removes git, gitlab, github, DockerHub and DOCR images for the app name specified in the input json file
-func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
+func checkForGitAndDockerHub(allFiles []doctl.UpdatedRepo, spec *godo.AppSpec) {
 	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
@@ -201,9 +226,9 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 
 // parseJsonInput takes the array of json object as input and unique name of users app as appName
 //it parses the input and returns UpdatedRepo of the input
-func parseJsonInput(input string, appName string) ([]mylib.UpdatedRepo, error) {
+func parseJsonInput(input string, appName string) ([]doctl.UpdatedRepo, error) {
 	//takes care of empty json Deployment (use case where we redeploy using same app spec)
-	var allRepos []mylib.UpdatedRepo
+	var allRepos []doctl.UpdatedRepo
 	err := json.Unmarshal([]byte(input), &allRepos)
 	if err != nil {
 		return nil, errors.Wrap(err, "error in parsing json data from file")
@@ -212,7 +237,7 @@ func parseJsonInput(input string, appName string) ([]mylib.UpdatedRepo, error) {
 }
 
 // filterApps filters git and DockerHub apps and then updates app spec with DOCR
-func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
+func filterApps(allFiles []doctl.UpdatedRepo, appSpec godo.AppSpec) AllError {
 	//remove all gitlab,github, git and dockerhub app info from appSpec for provided unique name component in input
 	checkForGitAndDockerHub(allFiles, &appSpec)
 

@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+//TestParseJsonInput uses custom input to check if the parseJsonInput function is working properly
 func TestParseJsonInput(t *testing.T) {
 	temp := `[ {
 		"name": "frontend",
@@ -28,6 +29,7 @@ func TestParseJsonInput(t *testing.T) {
 	}
 }
 
+//TestCheckForGitAndDockerHub uses custom input to check if the checkForGitAndDockerHub is working
 func TestCheckForGitAndDockerHub(t *testing.T) {
 	testInput, err := ioutil.ReadFile("testdata/sample-golang.yaml")
 	if err != nil {
@@ -63,6 +65,8 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 	}
 
 }
+
+//TestFilterApps tests filterApps function using testdata/sample-golang.yaml as input
 func TestFilterApps(t *testing.T) {
 	testInput, err := ioutil.ReadFile("testdata/sample-golang.yaml")
 	if err != nil {
@@ -101,6 +105,8 @@ func TestFilterApps(t *testing.T) {
 		t.Errorf("error in filterApps")
 	}
 }
+
+//TestUpdateLocalAppSpec tests all the non doctl dependent functions
 func TestUpdateLocalAppSpec(t *testing.T) {
 	t1Input := `[{
 		  "name": "web",

@@ -131,7 +131,6 @@ func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
 	if appID == "" {
 		return "", errors.Wrap(err, "app not found")
 	}
-
 	return appID, nil
 }
 
@@ -180,5 +179,4 @@ func (d *DoctlServices) ReDeploy(input string, appName string) error {
 		return nil
 	}
 	return errors.Errorf("Please provide valid json input")
-
 }

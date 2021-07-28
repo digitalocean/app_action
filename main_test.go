@@ -31,6 +31,7 @@ func TestParseJsonInput(t *testing.T) {
 
 //TestCheckForGitAndDockerHub uses custom input to check if the checkForGitAndDockerHub is working
 func TestCheckForGitAndDockerHub(t *testing.T) {
+	//sample-golang is app spec used for testing purposes
 	testInput, err := ioutil.ReadFile("testdata/sample-golang.yaml")
 	if err != nil {
 		t.Errorf("error in reading test file")
@@ -58,6 +59,7 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 		t.Errorf("error in unmarshalling input data")
 	}
 
+	//check for git,github,gitlab,DOCR and dockerhub removal for app name provided in user input
 	checkForGitAndDockerHub(allRepos, &app)
 	if app.Services[0].Name == "web" && app.Services[0].Git != nil {
 
@@ -68,6 +70,7 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 
 //TestFilterApps tests filterApps function using testdata/sample-golang.yaml as input
 func TestFilterApps(t *testing.T) {
+	//sample-golang is app spec used for testing purposes
 	testInput, err := ioutil.ReadFile("testdata/sample-golang.yaml")
 	if err != nil {
 		t.Errorf("error in reading test file")
@@ -85,6 +88,8 @@ func TestFilterApps(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
+
+	//paseJsonInput function is used to parse the input json data
 	allRepos, err := parseJsonInput(temp, "_")
 	if err != nil {
 		t.Errorf(err.Error())
@@ -95,6 +100,7 @@ func TestFilterApps(t *testing.T) {
 		t.Errorf("error in unmarshalling input data")
 	}
 
+	//filterApps function is used to filter the app spec based on the app name provided in user input
 	aErr := filterApps(allRepos, app)
 	if aErr.name != "" {
 		t.Errorf(aErr.name)
@@ -114,29 +120,30 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 		  "tag": "latest"
 		}
 	  ]`
+
+	//temp is the deployment spec scraped from actual deployment used for testing purposes
 	testInput, err := ioutil.ReadFile("testdata/temp")
 	if err != nil {
 		t.Errorf("error in reading test file")
 	}
+
+	//test for all functions which are independent of doctl
 	err = updateLocalAppSpec(t1Input, "sample_golang", testInput)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	f1, err1 := ioutil.ReadFile(".do._app.yaml")
-
 	if err1 != nil {
 		log.Fatal(err1)
 	}
 
+	//read updatedAppSpec.yaml to compare the final output with expected output
 	f2, err2 := ioutil.ReadFile("testdata/updatedAppSpec.yaml")
-
 	if err2 != nil {
 		log.Fatal(err2)
 	}
-
 	if bytes.Equal(f1, f2) == false {
 		t.Errorf("error in parsing app spec yaml file")
 	}
 	os.Remove(".do._app.yaml")
-
 }

@@ -164,6 +164,7 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
+
 	//remove git, gitlab, github and dockerhub spec of services with unique name declared in input
 	for _, service := range spec.Services {
 		if !nameMap[service.Name] {
@@ -174,6 +175,7 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		service.GitHub = nil
 		service.Image = nil
 	}
+
 	//remove git, gitlab, github and dockerhub spec of workers with unique name declared in input
 	for _, worker := range spec.Workers {
 		if !nameMap[worker.Name] {
@@ -184,6 +186,7 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		worker.GitHub = nil
 		worker.Image = nil
 	}
+
 	//remove git, gitlab, github and dockerhub spec of Jobs with unique name declared in input
 	for _, job := range spec.Jobs {
 		if !nameMap[job.Name] {
@@ -210,14 +213,15 @@ func parseJsonInput(input string, appName string) ([]mylib.UpdatedRepo, error) {
 
 // filterApps filters git and DockerHub apps and then updates app spec with DOCR
 func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
-	//remove all gitlab,github, git and dockerhub app info from appSpec for provided unique name component
-	//in input
+	//remove all gitlab,github, git and dockerhub app info from appSpec for provided unique name component in input
 	checkForGitAndDockerHub(allFiles, &appSpec)
+
 	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
+
 	//iterate through all services, worker and job to update DOCR image in AppSpec based on unique name declared in input
 	for key := range allFiles {
 		for _, service := range appSpec.Services {
@@ -248,7 +252,8 @@ func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
 			job.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
 			delete(nameMap, job.Name)
 		}
-		//if static site name is mentioned throw error as static sites do not support DOCR
+
+		//if static sites unique name is mentioned in the user input throw error as static sites do not support DOCR
 		for _, static := range appSpec.StaticSites {
 			if static.Name != allFiles[key].Name {
 				continue

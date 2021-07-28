@@ -142,7 +142,6 @@ func updateLocalAppSpec(listOfImage string, appName string, apps []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "Error in writing local yaml file")
 	}
-
 	return nil
 
 }
@@ -155,7 +154,6 @@ func parseDeploymentSpec(apps []byte) (*godo.AppSpec, error) {
 		log.Fatal("Error in retrieving app spec: ", err)
 	}
 	appSpec := *app[0].Spec
-
 	return &appSpec, nil
 }
 
@@ -166,7 +164,6 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
-
 	//remove git, gitlab, github and dockerhub spec of services with unique name declared in input
 	for _, service := range spec.Services {
 		if !nameMap[service.Name] {
@@ -177,7 +174,6 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		service.GitHub = nil
 		service.Image = nil
 	}
-
 	//remove git, gitlab, github and dockerhub spec of workers with unique name declared in input
 	for _, worker := range spec.Workers {
 		if !nameMap[worker.Name] {
@@ -188,7 +184,6 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		worker.GitHub = nil
 		worker.Image = nil
 	}
-
 	//remove git, gitlab, github and dockerhub spec of Jobs with unique name declared in input
 	for _, job := range spec.Jobs {
 		if !nameMap[job.Name] {
@@ -219,13 +214,11 @@ func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
 	//remove all gitlab,github, git and dockerhub app info from appSpec for provided unique name component
 	//in input
 	checkForGitAndDockerHub(allFiles, &appSpec)
-
 	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
-
 	//iterate through all services, worker and job to update DOCR image in AppSpec based on unique name declared in input
 	for key := range allFiles {
 		for _, service := range appSpec.Services {
@@ -266,12 +259,10 @@ func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
 				}
 			}
 		}
-
 	}
 	if len(nameMap) == 0 {
 		return AllError{}
 	}
-
 	keys := make([]string, 0, len(nameMap))
 	for k := range nameMap {
 		keys = append(keys, k)
@@ -280,5 +271,4 @@ func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
 		name:     "all files not found",
 		notFound: keys,
 	}
-
 }

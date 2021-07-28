@@ -25,12 +25,17 @@ func main() {
 	appName := os.Args[2]
 	listOfImage := os.Args[1]
 	authToken := os.Args[3]
+
+	//declaring interface for doctl functions
 	var dependent mylib.DoctlDependencies
 	d := mylib.DoctlServices{Dep: dependent}
+
+	//check for auth token
 	if strings.TrimSpace(authToken) == "" {
 		log.Fatal("No auth token provided")
 	}
 
+	//check for app name
 	if strings.TrimSpace(appName) == "" {
 		log.Fatal("No app name provided")
 	}
@@ -54,12 +59,6 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 		log.Fatal(err)
 	}
 
-	//parse array of input objects
-	input, err := parseJsonInput(listOfImage, appName)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	//retrieve AppID from users deployment
 	appID, err := d.RetrieveAppID(os.Args[2])
 	if err != nil {
@@ -78,34 +77,10 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 		log.Fatal(err)
 	}
 
-	//parse array of Deployment objects
-	var app []godo.App
-	err = json.Unmarshal(apps, &app)
+	//update local app spec
+	err = updateLocalAppSpec(listOfImage, appName, apps)
 	if err != nil {
-		log.Fatal("Error in retrieving app spec: ", err)
-	}
-	appSpec := *app[0].Spec
-
-	//updates all the docr images based on user input
-	newErr := filterApps(input, appSpec)
-	if newErr.name != "" {
-		log.Print(newErr.name)
-		if len(newErr.notFound) != 0 {
-			log.Fatalf("%v", newErr.notFound)
-		}
-		os.Exit(1)
-	}
-
-	//build yaml from the input json data
-	newYaml, err := yaml.Marshal(appSpec)
-	if err != nil {
-		log.Fatal("Error in building spec from json data")
-	}
-
-	//write to local temp file
-	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
-	if err != nil {
-		log.Fatal("Error in writing to yaml")
+		log.Fatal(err)
 	}
 
 	//updates app spec of the app using the local temp file and update
@@ -125,14 +100,74 @@ func run(appName, listOfImage, authToken string, d *mylib.DoctlServices) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//deletes the local temp app spec file
+	err = os.Remove(".do._app.yaml")
+	if err != nil {
+		log.Fatal(err, "Error in removing local file")
+	}
+}
+
+func updateLocalAppSpec(listOfImage string, appName string, apps []byte) error {
+	//parse array of input objects
+	input, err := parseJsonInput(listOfImage, appName)
+	if err != nil {
+		return err
+	}
+
+	//parse array of Deployment objects
+	appSpec, err := parseDeploymentSpec(apps)
+	if err != nil {
+		return err
+	}
+
+	//updates all the docr images based on user input
+	newErr := filterApps(input, *appSpec)
+	if newErr.name != "" {
+		log.Print(newErr.name)
+		if len(newErr.notFound) != 0 {
+			log.Fatalf("%v", newErr.notFound)
+		}
+		return errors.New(newErr.name)
+	}
+
+	//build yaml from the input json data
+	newYaml, err := yaml.Marshal(appSpec)
+	if err != nil {
+		return errors.Wrap(err, "Error in building yaml")
+	}
+
+	//write to local temp file
+	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
+	if err != nil {
+		return errors.Wrap(err, "Error in writing local yaml file")
+	}
+
+	return nil
+
+}
+
+// parseDeploymentSpec parses deployment array and retrieves appSpec of recent deployment
+func parseDeploymentSpec(apps []byte) (*godo.AppSpec, error) {
+	var app []godo.App
+	err := json.Unmarshal(apps, &app)
+	if err != nil {
+		log.Fatal("Error in retrieving app spec: ", err)
+	}
+	appSpec := *app[0].Spec
+
+	return &appSpec, nil
 }
 
 // checkForGitAndDockerHub Remove git and DockerHub
 func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
+	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
+
+	//remove git, gitlab, github and dockerhub spec of services with unique name declared in input
 	for _, service := range spec.Services {
 		if !nameMap[service.Name] {
 			continue
@@ -142,6 +177,8 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		service.GitHub = nil
 		service.Image = nil
 	}
+
+	//remove git, gitlab, github and dockerhub spec of workers with unique name declared in input
 	for _, worker := range spec.Workers {
 		if !nameMap[worker.Name] {
 			continue
@@ -151,6 +188,8 @@ func checkForGitAndDockerHub(allFiles []mylib.UpdatedRepo, spec *godo.AppSpec) {
 		worker.GitHub = nil
 		worker.Image = nil
 	}
+
+	//remove git, gitlab, github and dockerhub spec of Jobs with unique name declared in input
 	for _, job := range spec.Jobs {
 		if !nameMap[job.Name] {
 			continue
@@ -177,12 +216,17 @@ func parseJsonInput(input string, appName string) ([]mylib.UpdatedRepo, error) {
 
 // filterApps filters git and DockerHub apps and then updates app spec with DOCR
 func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
+	//remove all gitlab,github, git and dockerhub app info from appSpec for provided unique name component
+	//in input
 	checkForGitAndDockerHub(allFiles, &appSpec)
+
+	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
 
+	//iterate through all services, worker and job to update DOCR image in AppSpec based on unique name declared in input
 	for key := range allFiles {
 		for _, service := range appSpec.Services {
 			if service.Name != allFiles[key].Name {
@@ -212,6 +256,7 @@ func filterApps(allFiles []mylib.UpdatedRepo, appSpec godo.AppSpec) AllError {
 			job.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
 			delete(nameMap, job.Name)
 		}
+		//if static site name is mentioned throw error as static sites do not support DOCR
 		for _, static := range appSpec.StaticSites {
 			if static.Name != allFiles[key].Name {
 				continue

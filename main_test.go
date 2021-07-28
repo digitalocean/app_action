@@ -1,72 +1,23 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
+	"bytes"
 	"io/ioutil"
-	"strings"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/digitalocean/godo"
 	"gopkg.in/yaml.v2"
 )
 
-type MockDoctlDependencies struct {
-	dep DoctlDependencies
-}
-
-func (m *MockDoctlDependencies) isAuthenticated(name string, token string) error {
-	return nil
-}
-func (m *MockDoctlDependencies) isDeployed(appID string) error {
-	fmt.Println("Build successful")
-	return nil
-}
-func (m *MockDoctlDependencies) getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
-	if strings.TrimSpace(input) == "" {
-		appID, err := m.retrieveAppID(appName)
-		if err != nil {
-			return nil, err
-		}
-		err = m.isDeployed(appID)
-		if err != nil {
-			return nil, err
-		}
-		return nil, nil
-	}
-	var allRepos []UpdatedRepo
-	err := json.Unmarshal([]byte(input), &allRepos)
-	if err != nil {
-		return nil, errors.New("error in parsing json data from file")
-	}
-	return allRepos, nil
-}
-func (m *MockDoctlDependencies) retrieveActiveDeployment(appID string) ([]byte, error) {
-
-	output, err := ioutil.ReadFile("/testdata/temp")
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
-}
-
-func (m *MockDoctlDependencies) updateAppPlatformAppSpec(appID string, appSpec string) error {
-	return nil
-}
-func (m *MockDoctlDependencies) retrieveAppID(name string) (string, error) {
-	return "5e6b7bd1-d04e-4694-8679-bf8651f72663", nil
-}
-func TestGetAllRepo(t *testing.T) {
+func TestParseJsonInput(t *testing.T) {
 	temp := `[ {
 		"name": "frontend",
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-
-	var test1Interface DoctlDependencies
-	t1 := MockDoctlDependencies{test1Interface}
-	allRepos, err := t1.getAllRepo(temp, "_")
+	allRepos, err := parseJsonInput(temp, "_")
 	if err != nil {
 		t.Errorf("Error in parsing input json data")
 	}
@@ -74,11 +25,6 @@ func TestGetAllRepo(t *testing.T) {
 		allRepos[0].Repository != "registry.digitalocean.com/<my-registry>/<my-image>" ||
 		allRepos[0].Tag != "latest" {
 		t.Errorf("Error in unmarshal")
-	}
-	//testing individual deployment for get all repo
-	_, err = t1.getAllRepo("", "TEST_APP_NAME")
-	if err != nil {
-		t.Errorf(err.Error())
 	}
 }
 
@@ -100,9 +46,7 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	var test2Interface DoctlDependencies
-	t2 := MockDoctlDependencies{test2Interface}
-	allRepos, err := t2.getAllRepo(temp, "_")
+	allRepos, err := parseJsonInput(temp, "_")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -137,9 +81,7 @@ func TestFilterApps(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	var test2Interface DoctlDependencies
-	t3 := MockDoctlDependencies{test2Interface}
-	allRepos, err := t3.getAllRepo(temp, "_")
+	allRepos, err := parseJsonInput(temp, "_")
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -158,6 +100,39 @@ func TestFilterApps(t *testing.T) {
 		app.Services[0].Image.Tag != "latest" {
 		t.Errorf("error in filterApps")
 	}
+}
+func TestUpdateLocalAppSpec(t *testing.T) {
+	t1Input := `[{
+		  "name": "web",
+		  "repository": "registry.digitalocean.com/sample-go/add_sample",
+		  "tag": "latest"
+		}
+	  ]`
+	testInput, err := ioutil.ReadFile("testdata/temp")
+	if err != nil {
+		t.Errorf("error in reading test file")
+	}
+	err = updateLocalAppSpec(t1Input, "sample_golang", testInput)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	f1, err1 := ioutil.ReadFile(".do._app.yaml")
+
+	if err1 != nil {
+		log.Fatal(err1)
+	}
+
+	f2, err2 := ioutil.ReadFile("testdata/updatedAppSpec.yaml")
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	if bytes.Equal(f1, f2) == false {
+		t.Errorf("error in parsing app spec yaml file")
+	}
+	os.Remove(".do._app.yaml")
+
 }
 
 // func TestRetrieveAppID(t *testing.T) {

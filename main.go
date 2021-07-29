@@ -20,6 +20,28 @@ type AllError struct {
 	notFound []string
 }
 
+//go:generate mockgen -package main -source=main.go -self_package main -destination mock.go DoctlClient
+
+//DoctlClient interface for doctl functions
+type DoctlClient interface {
+	ListDeployments(appID string) ([]godo.Deployment, error)
+	RetrieveActiveDeploymentID(appID string) (string, error)
+	RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error)
+	UpdateAppPlatformAppSpec(tmpfile, appID string) error
+	CreateDeployments(appID string) error
+	RetrieveFromDigitalocean() ([]byte, error)
+	RetrieveAppID(appName string) (string, error)
+	IsDeployed(appID string) error
+	Deploy(input string, appName string) error
+}
+
+type action struct {
+	appName   string
+	images    string
+	authToken string
+	client    DoctlClient
+}
+
 func main() {
 	//declaring variables for command line arguments input
 	appName := os.Args[2]
@@ -36,79 +58,94 @@ func main() {
 		log.Fatal("No app name provided")
 	}
 
-	//user authentication
-	d, err := doctl.NewDoctlClient(authToken)
+	d, err := doctl.NewClient(authToken)
 	if err != nil {
 		log.Fatal(err)
 	}
-	//run runs business logic of app_action
-	run(appName, images, authToken, &d)
+
+	a := &action{
+		appName:   appName,
+		images:    images,
+		authToken: authToken,
+		client:    &d,
+	}
+
+	err = a.run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 //run contains business logic of app_action
-func run(appName, images, authToken string, d *doctl.DoctlServices) {
-
+func (a *action) run() error {
 	//redeploying app with the same app spec
-	if strings.TrimSpace(images) == "" {
-		err := d.ReDeploy(images, appName)
+	if strings.TrimSpace(a.images) == "" {
+		err := a.client.Deploy(a.images, a.appName)
 		if err != nil {
-			log.Fatal(err)
+			return errors.Wrap(err, "triggering deploy")
 		}
 	}
 
 	//retrieve appID from users deployment
-	appID, err := d.RetrieveAppID(os.Args[2])
+	appID, err := a.client.RetrieveAppID(a.appName)
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "retrieving appID")
 	}
 
 	//retrieve deployment id of active deployment
-	deploymentID, err := d.RetrieveActiveDeploymentID(appID)
+	deploymentID, err := a.client.RetrieveActiveDeploymentID(appID)
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "retrieving active deployment id")
 	}
 
 	//retrieve apps from deployment id
-	apps, err := d.RetrieveActiveDeployment(deploymentID, appID)
+	apps, err := a.client.RetrieveActiveDeployment(deploymentID, appID)
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "retrieving active deployment")
 	}
 
 	//updates local app spec based on user input
-	tmpfile, err := updateLocalAppSpec(images, appName, apps)
+	tmpfile, err := a.updateLocalAppSpec(apps)
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "updating local app spec")
 	}
 
+	// cleanup app spec file if exists after run
+	defer func() {
+		if _, err := os.Stat(tmpfile); err == nil {
+			// deletes the local temp app spec file
+			err = os.Remove(tmpfile)
+			if err != nil {
+				log.Fatalf("deleting local temp app spec file: %s", err)
+			}
+		}
+	}()
+
 	//updates app spec of the app using the local temp file and update
-	err = d.UpdateAppPlatformAppSpec(tmpfile, appID)
+	err = a.client.UpdateAppPlatformAppSpec(tmpfile, appID)
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "updating app spec")
 	}
 
 	//creates a new deployment from the updated app spec
-	err = d.CreateDeployments(appID)
+	err = a.client.CreateDeployments(appID)
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "creating new deployment")
 	}
 
 	//checks for deployment status
-	err = d.IsDeployed(appID)
+	err = a.client.IsDeployed(appID)
 	if err != nil {
-		log.Fatal(err)
+		return errors.Wrap(err, "checking deployment status")
 	}
 
-	//deletes the local temp app spec file
-	err = os.Remove(tmpfile)
-	if err != nil {
-		log.Fatal(err, "Error in removing local file")
-	}
+	return nil
 }
 
 //updateLocalAppSpec updates app spec based on users input and saves it in a local file called .do._app.yaml
-func updateLocalAppSpec(images string, appName string, apps []byte) (string, error) {
+func (a *action) updateLocalAppSpec(apps []byte) (string, error) {
 	//parse array of input objects
-	input, err := parseJsonInput(images, appName)
+	input, err := parseJsonInput(a.images, a.appName)
 	if err != nil {
 		return "", err
 	}

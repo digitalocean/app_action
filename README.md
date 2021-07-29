@@ -80,5 +80,10 @@ Because image manifests are cached in different regions, there may be a maximum 
 - SHA hash of Github commit
 - SHA hash of the new manifest
 
+## Development
+
+- Install gomock with `go install github.com/golang/mock/mockgen@v1.6.0`
+- `go generate ./...` to generate the mocks
+
 ## License
 This GitHub Action and associated scripts and documentation in this project are released under the [MIT License](LICENSE).

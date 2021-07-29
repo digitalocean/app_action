@@ -127,8 +127,13 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 		t.Errorf("error in reading test file")
 	}
 
+	a := &action{
+		appName: "sample-golang",
+		images:  t1Input,
+	}
+
 	//test for all functions which are independent of doctl
-	file, err := updateLocalAppSpec(t1Input, "sample_golang", testInput)
+	file, err := a.updateLocalAppSpec(testInput)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -147,3 +152,32 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 	}
 	os.Remove(file)
 }
+
+// func Test_run(t *testing.T) {
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+
+// 	appID := "2a91c9e3-253f-4c75-99e5-b81b9c3f744f"
+// 	activeDeploymentID := "fac38395-30f3-4c59-9e6c-3a67523f51de"
+
+// 	do := NewMockDoctlClient(ctrl)
+// 	do.EXPECT().RetrieveAppID(gomock.Eq("sample-golang")).Return(appID, nil)
+// 	do.EXPECT().RetrieveActiveDeploymentID(gomock.Eq("appID")).Return(activeDeploymentID, nil)
+// 	// ... etc
+
+// 	a := &action{
+// 		appName: "sample-golang",
+// 		images: `[{
+// 			"name": "web",
+// 			"repository": "registry.digitalocean.com/sample-go/add_sample",
+// 			"tag": "latest"
+// 		  }
+// 		]`,
+// 		client: do,
+// 	}
+
+// 	err := a.run()
+// 	if err != nil {
+// 		t.Fail()
+// 	}
+// }

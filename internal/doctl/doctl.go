@@ -10,47 +10,31 @@ import (
 	"github.com/pkg/errors"
 )
 
-//DoctlDependencies interface for doctl dependent functions
-type DoctlDependencies interface {
-	ListDeployments(appID string) ([]byte, error)
-	RetrieveActiveDeploymentID(appID string) (string, error)
-	RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error)
-	UpdateAppPlatformAppSpec(tmpfile, appID string) error
-	CreateDeployments(appID string) error
-	RetrieveFromDigitalocean() ([]byte, error)
-	RetrieveAppID(appName string) (string, error)
-	IsDeployed(appID string) error
-	ReDeploy(input string, appName string) error
+// Client is a struct for holding doctl dependent function interface
+type Client struct {
 }
 
-//DoctlServices is a struct for holding doctl dependent function interface
-type DoctlServices struct {
-	Dep DoctlDependencies
-}
-
-//UpdatedRepo used for parsing json object of changed repo
+// UpdatedRepo used for parsing json object of changed repo
 type UpdatedRepo struct {
 	Name       string
 	Repository string
 	Tag        string
 }
 
-//IsAuthenticated used for user authentication
-func NewDoctlClient(token string) (DoctlServices, error) {
+// NewClient doctl client wrapper
+func NewClient(token string) (Client, error) {
 	val, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", token)).Output()
 	if err != nil {
-		return DoctlServices{}, fmt.Errorf("unable to authenticate user: %s", val)
+		return Client{}, fmt.Errorf("unable to authenticate user: %s", val)
 	}
 
-	//declaring interface for doctl functions
-	var dependent DoctlDependencies
-	d := DoctlServices{Dep: dependent}
+	d := Client{}
 
 	return d, nil
 }
 
-//GetCurrentDeployment takes appID as input and returns list of deployments (used to retrieve most recent deployment)
-func (d *DoctlServices) ListDeployments(appID string) ([]godo.Deployment, error) {
+// ListDeployments takes appID as input and returns list of deployments (used to retrieve most recent deployment)
+func (d *Client) ListDeployments(appID string) ([]godo.Deployment, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
 	spec, err := cmd.Output()
 	if err != nil {
@@ -64,8 +48,8 @@ func (d *DoctlServices) ListDeployments(appID string) ([]godo.Deployment, error)
 	return app, nil
 }
 
-//RetrieveActiveDeploymentID takes appID as input and retrieves currently deployment id of the active deployment of the app on App Platform
-func (d *DoctlServices) RetrieveActiveDeploymentID(appID string) (string, error) {
+// RetrieveActiveDeploymentID takes appID as input and retrieves currently deployment id of the active deployment of the app on App Platform
+func (d *Client) RetrieveActiveDeploymentID(appID string) (string, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get --format ActiveDeployment.ID --no-header %s", appID))
 	deployID, err := cmd.Output()
 	if err != nil {
@@ -75,9 +59,9 @@ func (d *DoctlServices) RetrieveActiveDeploymentID(appID string) (string, error)
 	return deploymentID, nil
 }
 
-//RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and app id
-//returns the app spec from App Platform as []byte
-func (d *DoctlServices) RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error) {
+// RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and app id
+// returns the app spec from App Platform as []byte
+func (d *Client) RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
 	apps, err := cmd.Output()
 	if err != nil {
@@ -86,9 +70,9 @@ func (d *DoctlServices) RetrieveActiveDeployment(deploymentID string, appID stri
 	return apps, nil
 }
 
-//UpdateAppPlatformAppSpec takes appID as input
-//updates App Platform's app spec and creates deployment
-func (d *DoctlServices) UpdateAppPlatformAppSpec(tmpfile, appID string) error {
+// UpdateAppPlatformAppSpec takes appID as input
+// updates App Platform's app spec and creates deployment
+func (d *Client) UpdateAppPlatformAppSpec(tmpfile, appID string) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec %s", appID, tmpfile))
 	_, err := cmd.Output()
 	if err != nil {
@@ -98,8 +82,8 @@ func (d *DoctlServices) UpdateAppPlatformAppSpec(tmpfile, appID string) error {
 	return nil
 }
 
-//CreateDeployments takes app id as an input and creates deployment for the app
-func (d *DoctlServices) CreateDeployments(appID string) error {
+// CreateDeployments takes app id as an input and creates deployment for the app
+func (d *Client) CreateDeployments(appID string) error {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
 	_, err := cmd.Output()
 	if err != nil {
@@ -108,8 +92,8 @@ func (d *DoctlServices) CreateDeployments(appID string) error {
 	return nil
 }
 
-//RetrieveFromDigitalocean returns the app from DigitalOcean as a slice of byte
-func (d *DoctlServices) RetrieveFromDigitalocean() ([]byte, error) {
+// RetrieveFromDigitalocean returns the app from DigitalOcean as a slice of byte
+func (d *Client) RetrieveFromDigitalocean() ([]byte, error) {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
@@ -119,13 +103,13 @@ func (d *DoctlServices) RetrieveFromDigitalocean() ([]byte, error) {
 }
 
 // RetrieveAppID takes unique app name as an input and retrieves app id from app platform based on the users unique app name
-func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
+func (d *Client) RetrieveAppID(appName string) (string, error) {
 	apps, err := d.RetrieveFromDigitalocean()
 	if err != nil {
 		return "", err
 	}
 
-	//parsing incoming data for AppId
+	// parsing incoming data for AppId
 	var arr []godo.App
 	err = json.Unmarshal(apps, &arr)
 	if err != nil {
@@ -144,9 +128,8 @@ func (d *DoctlServices) RetrieveAppID(appName string) (string, error) {
 	return appID, nil
 }
 
-//isDeployed takes app id as an input and checks for the status of the deployment
-//until the status is updated to ACTIVE or failed
-func (d *DoctlServices) IsDeployed(appID string) error {
+// IsDeployed takes app id as an input and checks for the status of the deployment until the status is updated to ACTIVE or failed
+func (d *Client) IsDeployed(appID string) error {
 	done := false
 	for !done {
 		fmt.Println("App Platform is Building ....")
@@ -166,8 +149,8 @@ func (d *DoctlServices) IsDeployed(appID string) error {
 	return nil
 }
 
-//ReDeploy redeploys app if user provides empty json file
-func (d *DoctlServices) ReDeploy(input string, appName string) error {
+// Deploy redeploys app if user provides empty json file
+func (d *Client) Deploy(input string, appName string) error {
 	if strings.TrimSpace(string(input)) == "" {
 		appID, err := d.RetrieveAppID(appName)
 		if err != nil {

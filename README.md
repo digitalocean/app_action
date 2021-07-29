@@ -30,7 +30,7 @@
     with:
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-      list_of_image: '[
+      images: '[
                         {
                           "name": " ",
                           "repository": " ",
@@ -50,7 +50,7 @@
 
 # Inputs
 - `app_name` - Name of the app on App Platform.
-- `list_of_image` - (optional)List of json object for providing information about name, repository and tag of the image in docr.(by default latest tag is used)
+- `images` - (optional)List of json object for providing information about name, repository and tag of the image in docr.(by default latest tag is used)
     ```json
     {
       "name": " ",

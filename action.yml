@@ -11,7 +11,7 @@ inputs:
   token:
     description: DigitalOcean Personal Access Token.(use https://docs.digitalocean.com/reference/api/create-personal-access-token/ for creating new token)
     required: true
-  list_of_image:
+  images:
     description: (OPTIONAL)a json array of objects with the properties name (description), repository (repo url), tag (image tag)
     required: false
     default: ""
@@ -20,6 +20,6 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - "${{ inputs.list_of_image }}"
+    - "${{ inputs.images }}"
     - "${{ inputs.app_name }}"
     - "${{ inputs.token }}"

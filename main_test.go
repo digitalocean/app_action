@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/digitalocean/godo"
+	gomock "github.com/golang/mock/gomock"
 	"gopkg.in/yaml.v2"
 )
 
@@ -153,31 +154,39 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 	os.Remove(file)
 }
 
-// func Test_run(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	defer ctrl.Finish()
+func Test_run(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-// 	appID := "2a91c9e3-253f-4c75-99e5-b81b9c3f744f"
-// 	activeDeploymentID := "fac38395-30f3-4c59-9e6c-3a67523f51de"
+	appID := "2a91c9e3-253f-4c75-99e5-b81b9c3f744f"
+	activeDeploymentID := "fac38395-30f3-4c59-9e6c-3a67523f51de"
 
-// 	do := NewMockDoctlClient(ctrl)
-// 	do.EXPECT().RetrieveAppID(gomock.Eq("sample-golang")).Return(appID, nil)
-// 	do.EXPECT().RetrieveActiveDeploymentID(gomock.Eq("appID")).Return(activeDeploymentID, nil)
-// 	// ... etc
+	do := NewMockDoctlClient(ctrl)
+	do.EXPECT().RetrieveAppID(gomock.Eq("sample-golang")).Return(appID, nil)
+	do.EXPECT().RetrieveActiveDeploymentID(gomock.Eq(appID)).Return(activeDeploymentID, nil)
+	//temp is the deployment spec scraped from actual deployment used for testing purposes
+	testInput, err := ioutil.ReadFile("testdata/temp")
+	if err != nil {
+		t.Errorf("error in reading test file")
+	}
+	do.EXPECT().RetrieveActiveDeployment(gomock.Eq(activeDeploymentID), gomock.Eq(appID)).Return(testInput, nil)
+	do.EXPECT().UpdateAppPlatformAppSpec(gomock.Any(), appID).Return(nil)
+	do.EXPECT().CreateDeployments(appID).Return(nil)
+	do.EXPECT().IsDeployed(appID).Return(nil)
 
-// 	a := &action{
-// 		appName: "sample-golang",
-// 		images: `[{
-// 			"name": "web",
-// 			"repository": "registry.digitalocean.com/sample-go/add_sample",
-// 			"tag": "latest"
-// 		  }
-// 		]`,
-// 		client: do,
-// 	}
+	a := &action{
+		appName: "sample-golang",
+		images: `[{
+			"name": "web",
+			"repository": "registry.digitalocean.com/sample-go/add_sample",
+			"tag": "latest"
+		  }
+		]`,
+		client: do,
+	}
 
-// 	err := a.run()
-// 	if err != nil {
-// 		t.Fail()
-// 	}
-// }
+	err = a.run()
+	if err != nil {
+		t.Fail()
+	}
+}

@@ -7,6 +7,7 @@ package main
 import (
 	reflect "reflect"
 
+	parser_struct "github.com/ParamPatel207/app_action/internal/parser_struct"
 	godo "github.com/digitalocean/godo"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -92,18 +93,19 @@ func (mr *MockDoctlClientMockRecorder) ListDeployments(appID interface{}) *gomoc
 }
 
 // RetrieveActiveDeployment mocks base method.
-func (m *MockDoctlClient) RetrieveActiveDeployment(deploymentID, appID string) ([]byte, error) {
+func (m *MockDoctlClient) RetrieveActiveDeployment(deploymentID, appID, input string) ([]parser_struct.UpdatedRepo, *godo.AppSpec, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RetrieveActiveDeployment", deploymentID, appID)
-	ret0, _ := ret[0].([]byte)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "RetrieveActiveDeployment", deploymentID, appID, input)
+	ret0, _ := ret[0].([]parser_struct.UpdatedRepo)
+	ret1, _ := ret[1].(*godo.AppSpec)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // RetrieveActiveDeployment indicates an expected call of RetrieveActiveDeployment.
-func (mr *MockDoctlClientMockRecorder) RetrieveActiveDeployment(deploymentID, appID interface{}) *gomock.Call {
+func (mr *MockDoctlClientMockRecorder) RetrieveActiveDeployment(deploymentID, appID, input interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetrieveActiveDeployment", reflect.TypeOf((*MockDoctlClient)(nil).RetrieveActiveDeployment), deploymentID, appID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RetrieveActiveDeployment", reflect.TypeOf((*MockDoctlClient)(nil).RetrieveActiveDeployment), deploymentID, appID, input)
 }
 
 // RetrieveActiveDeploymentID mocks base method.
@@ -137,10 +139,10 @@ func (mr *MockDoctlClientMockRecorder) RetrieveAppID(appName interface{}) *gomoc
 }
 
 // RetrieveFromDigitalocean mocks base method.
-func (m *MockDoctlClient) RetrieveFromDigitalocean() ([]byte, error) {
+func (m *MockDoctlClient) RetrieveFromDigitalocean() ([]godo.App, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RetrieveFromDigitalocean")
-	ret0, _ := ret[0].([]byte)
+	ret0, _ := ret[0].([]godo.App)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

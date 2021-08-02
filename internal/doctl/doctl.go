@@ -1,24 +1,18 @@
 package doctl
 
 import (
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strings"
 
+	"github.com/ParamPatel207/app_action/internal/parser"
+	"github.com/ParamPatel207/app_action/internal/parser_struct"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
 )
 
 // Client is a struct for holding doctl dependent function interface
 type Client struct {
-}
-
-// UpdatedRepo used for parsing json object of changed repo
-type UpdatedRepo struct {
-	Name       string
-	Repository string
-	Tag        string
 }
 
 // NewClient doctl client wrapper
@@ -40,12 +34,13 @@ func (d *Client) ListDeployments(appID string) ([]godo.Deployment, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error in retrieving list of deployments")
 	}
-	var app []godo.Deployment
-	err = json.Unmarshal(spec, &app)
+
+	// parsing incoming data to get all deployments
+	deployments, err := parser.ParseDeploymentSpec(spec)
 	if err != nil {
-		return nil, errors.Wrap(err, "error in parsing deployment")
+		return nil, err
 	}
-	return app, nil
+	return deployments, nil
 }
 
 // RetrieveActiveDeploymentID takes appID as input and retrieves currently deployment id of the active deployment of the app on App Platform
@@ -60,14 +55,26 @@ func (d *Client) RetrieveActiveDeploymentID(appID string) (string, error) {
 }
 
 // RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and app id
-// returns the app spec from App Platform as []byte
-func (d *Client) RetrieveActiveDeployment(deploymentID string, appID string) ([]byte, error) {
+// returns the app spec from App Platform as *godo.AppSpec, retrieves parsed json object of the json input
+func (d *Client) RetrieveActiveDeployment(deploymentID string, appID string, input string) ([]parser_struct.UpdatedRepo, *godo.AppSpec, error) {
 	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
 	apps, err := cmd.Output()
 	if err != nil {
-		return nil, errors.Wrap(err, "error in retrieving currently deployed app id")
+		return nil, nil, errors.Wrap(err, "error in retrieving currently deployed app id")
 	}
-	return apps, nil
+
+	//parse json input
+	allRepos, err := parser.ParseJsonInput(input)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	//parse deployment spec
+	deployments, err := parser.ParseDeploymentSpec(apps)
+	if err != nil {
+		return nil, nil, err
+	}
+	return allRepos, deployments[0].Spec, nil
 }
 
 // UpdateAppPlatformAppSpec takes appID as input
@@ -93,28 +100,27 @@ func (d *Client) CreateDeployments(appID string) error {
 }
 
 // RetrieveFromDigitalocean returns the app from DigitalOcean as a slice of byte
-func (d *Client) RetrieveFromDigitalocean() ([]byte, error) {
+func (d *Client) RetrieveFromDigitalocean() ([]godo.App, error) {
 	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get user app data from digitalocean")
 	}
-	return apps, nil
+	// parsing incoming data for AppId
+	arr, err := parser.ParseAppSpec(apps)
+	if err != nil {
+		return nil, err
+	}
+	return arr, nil
 }
 
 // RetrieveAppID takes unique app name as an input and retrieves app id from app platform based on the users unique app name
 func (d *Client) RetrieveAppID(appName string) (string, error) {
-	apps, err := d.RetrieveFromDigitalocean()
+	arr, err := d.RetrieveFromDigitalocean()
 	if err != nil {
 		return "", err
 	}
-
-	// parsing incoming data for AppId
-	var arr []godo.App
-	err = json.Unmarshal(apps, &arr)
-	if err != nil {
-		return "", errors.Wrap(err, "error in parsing data for AppId")
-	}
+	//retrieve app id app array
 	var appID string
 	for k := range arr {
 		if arr[k].Spec.Name == appName {

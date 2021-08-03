@@ -84,6 +84,7 @@ func (a *action) run() error {
 		if err != nil {
 			return errors.Wrap(err, "triggering deploy")
 		}
+		return nil
 	}
 
 	//retrieve appID from users deployment
@@ -161,15 +162,6 @@ func (a *action) updateLocalAppSpec(input []parser_struct.UpdatedRepo, appSpec *
 	}
 	return tmpfile, nil
 }
-
-// //parseJsonInput parses updated json file to yaml
-// func parseAppSpecToYaml(appSpec *godo.AppSpec) ([]byte, error) {
-// 	newYaml, err := yaml.Marshal(appSpec)
-// 	if err != nil {
-// 		return nil, errors.Wrap(err, "Error in building yaml")
-// 	}
-// 	return newYaml, nil
-// }
 
 //writeToTempFile writes to a local temp file
 func writeToTempFile(appSpec *godo.AppSpec) (string, error) {

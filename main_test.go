@@ -7,7 +7,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ParamPatel207/app_action/internal/parser"
 	"github.com/digitalocean/godo"
+	gomock "github.com/golang/mock/gomock"
 	"gopkg.in/yaml.v2"
 )
 
@@ -18,7 +20,7 @@ func TestParseJsonInput(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	allRepos, err := parseJsonInput(temp, "_")
+	allRepos, err := parser.ParseJsonInput(temp)
 	if err != nil {
 		t.Errorf("Error in parsing input json data")
 	}
@@ -49,7 +51,7 @@ func TestCheckForGitAndDockerHub(t *testing.T) {
 		"repository": "registry.digitalocean.com/<my-registry>/<my-image>",
 		"tag": "latest"
 	  }]`
-	allRepos, err := parseJsonInput(temp, "_")
+	allRepos, err := parser.ParseJsonInput(temp)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -90,7 +92,7 @@ func TestFilterApps(t *testing.T) {
 	  }]`
 
 	//paseJsonInput function is used to parse the input json data
-	allRepos, err := parseJsonInput(temp, "_")
+	allRepos, err := parser.ParseJsonInput(temp)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -132,8 +134,18 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 		images:  t1Input,
 	}
 
+	allRepos, err := parser.ParseJsonInput(t1Input)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	//parseDeploymentSpec
+	appSpec, err := parser.ParseDeploymentSpec(testInput)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
 	//test for all functions which are independent of doctl
-	file, err := a.updateLocalAppSpec(testInput)
+	file, err := a.updateLocalAppSpec(allRepos, appSpec[0].Spec)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -153,31 +165,51 @@ func TestUpdateLocalAppSpec(t *testing.T) {
 	os.Remove(file)
 }
 
-// func Test_run(t *testing.T) {
-// 	ctrl := gomock.NewController(t)
-// 	defer ctrl.Finish()
+func Test_run(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-// 	appID := "2a91c9e3-253f-4c75-99e5-b81b9c3f744f"
-// 	activeDeploymentID := "fac38395-30f3-4c59-9e6c-3a67523f51de"
+	appID := "2a91c9e3-253f-4c75-99e5-b81b9c3f744f"
+	activeDeploymentID := "fac38395-30f3-4c59-9e6c-3a67523f51de"
+	sampleImages := `[{
+		"name": "web",
+		"repository": "registry.digitalocean.com/sample-go/add_sample",
+		"tag": "latest"
+	  }
+	]`
 
-// 	do := NewMockDoctlClient(ctrl)
-// 	do.EXPECT().RetrieveAppID(gomock.Eq("sample-golang")).Return(appID, nil)
-// 	do.EXPECT().RetrieveActiveDeploymentID(gomock.Eq("appID")).Return(activeDeploymentID, nil)
-// 	// ... etc
+	//parse input data
+	sampleImagesRepo, err := parser.ParseJsonInput(sampleImages)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
-// 	a := &action{
-// 		appName: "sample-golang",
-// 		images: `[{
-// 			"name": "web",
-// 			"repository": "registry.digitalocean.com/sample-go/add_sample",
-// 			"tag": "latest"
-// 		  }
-// 		]`,
-// 		client: do,
-// 	}
+	do := NewMockDoctlClient(ctrl)
+	do.EXPECT().RetrieveAppID(gomock.Eq("sample-golang")).Return(appID, nil)
+	do.EXPECT().RetrieveActiveDeploymentID(gomock.Eq(appID)).Return(activeDeploymentID, nil)
+	//temp is the deployment spec scraped from actual deployment used for testing purposes
+	testInput, err := ioutil.ReadFile("testdata/temp")
+	if err != nil {
+		t.Errorf("error in reading test file")
+	}
+	//parse testInput data
+	deployments, err := parser.ParseDeploymentSpec(testInput)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	do.EXPECT().RetrieveActiveDeployment(gomock.Eq(activeDeploymentID), gomock.Eq(appID), gomock.Eq(sampleImages)).Return(sampleImagesRepo, deployments[0].Spec, nil)
+	do.EXPECT().UpdateAppPlatformAppSpec(gomock.Any(), appID).Return(nil)
+	do.EXPECT().CreateDeployments(appID).Return(nil)
+	do.EXPECT().IsDeployed(appID).Return(nil)
 
-// 	err := a.run()
-// 	if err != nil {
-// 		t.Fail()
-// 	}
-// }
+	a := &action{
+		appName: "sample-golang",
+		images:  sampleImages,
+		client:  do,
+	}
+
+	err = a.run()
+	if err != nil {
+		t.Fail()
+	}
+}

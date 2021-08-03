@@ -44,14 +44,14 @@ jobs:
     # Run build of the application
     - name: Run build
       run: go build . 
-    # Run testing on the code
+  # Run testing on the code
   test:
     # This job will run after the build job completes
       needs: build
       strategy:
         matrix:
           go-version: [1.15.x, 1.16.x]
-          os: [ubuntu-latest, macos-latest, windows-latest]
+          os: [ubuntu-latest]
       runs-on: ${{ matrix.os }}
       steps:
       - name: Install Go

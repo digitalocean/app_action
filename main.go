@@ -1,25 +1,18 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
+	"github.com/ParamPatel207/app_action/internal/doctl"
+	"github.com/ParamPatel207/app_action/internal/parser"
+	"github.com/ParamPatel207/app_action/internal/parser_struct"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
-	"sigs.k8s.io/yaml"
 )
-
-// UpdatedRepo used for parsing json object of changed repo
-type UpdatedRepo struct {
-	Name       string
-	Repository string
-	Tag        string
-}
 
 // AllError is used for handling errors
 type AllError struct {
@@ -27,204 +20,187 @@ type AllError struct {
 	notFound []string
 }
 
-type doctlDependencies interface {
-	retrieveActiveDeployment(appID string) ([]byte, error)
-	retrieveAppID(appName string) (string, error)
-	isDeployed(appID string) error
-	updateAppPlatformApp(appID string) error
-	isAuthenticated(token string) error
-	createDeployments(appID string) error
-	retrieveFromDigitalocean() ([]byte, error)
+//go:generate mockgen -package main -source=main.go -self_package main -destination mock.go DoctlClient
+
+//DoctlClient interface for doctl functions
+type DoctlClient interface {
+	ListDeployments(appID string) ([]godo.Deployment, error)
+	RetrieveActiveDeploymentID(appID string) (string, error)
+	RetrieveActiveDeployment(deploymentID string, appID string, input string) ([]parser_struct.UpdatedRepo, *godo.AppSpec, error)
+	UpdateAppPlatformAppSpec(tmpfile, appID string) error
+	CreateDeployments(appID string) error
+	RetrieveFromDigitalocean() ([]godo.App, error)
+	RetrieveAppID(appName string) (string, error)
+	IsDeployed(appID string) error
+	Deploy(input string, appName string) error
 }
-type DoctlServices struct {
-	dep doctlDependencies
+
+type action struct {
+	appName   string
+	images    string
+	authToken string
+	client    DoctlClient
 }
 
 func main() {
-	var dependent doctlDependencies
-	d := DoctlServices{dep: dependent}
-	//user authentication
-	err := d.isAuthenticated(os.Args[3])
-	if err != nil {
-		log.Fatal(err)
+	//declaring variables for command line arguments input
+	appName := os.Args[2]
+	images := os.Args[1]
+	authToken := os.Args[3]
+
+	//check for authentication token
+	if strings.TrimSpace(authToken) == "" {
+		log.Fatal("No auth token provided")
 	}
-	input, err := d.getAllRepo(os.Args[1], os.Args[2])
-	if err != nil {
-		log.Fatal(err)
+
+	//check for app name
+	if strings.TrimSpace(appName) == "" {
+		log.Fatal("No app name provided")
 	}
-	//retrieve AppID from users deployment
-	appID, err := d.retrieveAppID(os.Args[2])
+
+	d, err := doctl.NewClient(authToken)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//retrieve id of active deployment
-	apps, err := d.retrieveActiveDeployment(appID)
+	a := &action{
+		appName:   appName,
+		images:    images,
+		authToken: authToken,
+		client:    &d,
+	}
+
+	err = a.run()
 	if err != nil {
 		log.Fatal(err)
 	}
-	var app []godo.App
-	err = json.Unmarshal(apps, &app)
-	if err != nil {
-		log.Fatal("Error in retrieving app spec: ", err)
-	}
-	appSpec := *app[0].Spec
+}
 
+//run contains business logic of app_action
+func (a *action) run() error {
+	//redeploying app with the same app spec
+	if strings.TrimSpace(a.images) == "" {
+		err := a.client.Deploy(a.images, a.appName)
+		if err != nil {
+			return errors.Wrap(err, "triggering deploy")
+		}
+	}
+
+	//retrieve appID from users deployment
+	appID, err := a.client.RetrieveAppID(a.appName)
+	if err != nil {
+		return errors.Wrap(err, "retrieving appID")
+	}
+
+	//retrieve deployment id of active deployment
+	deploymentID, err := a.client.RetrieveActiveDeploymentID(appID)
+	if err != nil {
+		return errors.Wrap(err, "retrieving active deployment id")
+	}
+
+	//retrieve apps from deployment id
+	input, apps, err := a.client.RetrieveActiveDeployment(deploymentID, appID, a.images)
+	if err != nil {
+		return errors.Wrap(err, "retrieving active deployment")
+	}
+
+	//updates local app spec based on user input
+	tmpfile, err := a.updateLocalAppSpec(input, apps)
+	if err != nil {
+		return errors.Wrap(err, "updating local app spec")
+	}
+
+	// cleanup app spec file if exists after run
+	defer func() {
+		if _, err := os.Stat(tmpfile); err == nil {
+			// deletes the local temp app spec file
+			err = os.Remove(tmpfile)
+			if err != nil {
+				log.Fatalf("deleting local temp app spec file: %s", err)
+			}
+		}
+	}()
+
+	//updates app spec of the app using the local temp file and update
+	err = a.client.UpdateAppPlatformAppSpec(tmpfile, appID)
+	if err != nil {
+		return errors.Wrap(err, "updating app spec")
+	}
+
+	//creates a new deployment from the updated app spec
+	err = a.client.CreateDeployments(appID)
+	if err != nil {
+		return errors.Wrap(err, "creating new deployment")
+	}
+
+	//checks for deployment status
+	err = a.client.IsDeployed(appID)
+	if err != nil {
+		return errors.Wrap(err, "checking deployment status")
+	}
+
+	return nil
+}
+
+//updateLocalAppSpec updates app spec based on users input and saves it in a local file called .do._app.yaml
+func (a *action) updateLocalAppSpec(input []parser_struct.UpdatedRepo, appSpec *godo.AppSpec) (string, error) {
 	//updates all the docr images based on user input
-	newErr := filterApps(input, appSpec)
+	newErr := filterApps(input, *appSpec)
 	if newErr.name != "" {
 		log.Print(newErr.name)
 		if len(newErr.notFound) != 0 {
 			log.Fatalf("%v", newErr.notFound)
 		}
-		os.Exit(1)
-	}
-	newYaml, err := yaml.Marshal(appSpec)
-	if err != nil {
-		log.Fatal("Error in building spec from json data")
-	}
-	//write to local file
-	err = ioutil.WriteFile(".do._app.yaml", newYaml, 0644)
-	if err != nil {
-		log.Fatal("Error in writing to yaml")
+		return "", errors.New(newErr.name)
 	}
 
-	//updates app spec of the app and deploys it
-	err = d.updateAppPlatformAppSpec(appID)
+	//write to local temp file
+	tmpfile, err := writeToTempFile(appSpec)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	//checks for deployment status
-	err = d.isDeployed(appID)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return tmpfile, nil
 }
 
-//isAuthenticated checks for authentication
-func (d *DoctlServices) isAuthenticated(token string) error {
-	val, err := exec.Command("sh", "-c", fmt.Sprintf("doctl auth init --access-token %s", token)).Output()
+// //parseJsonInput parses updated json file to yaml
+// func parseAppSpecToYaml(appSpec *godo.AppSpec) ([]byte, error) {
+// 	newYaml, err := yaml.Marshal(appSpec)
+// 	if err != nil {
+// 		return nil, errors.Wrap(err, "Error in building yaml")
+// 	}
+// 	return newYaml, nil
+// }
+
+//writeToTempFile writes to a local temp file
+func writeToTempFile(appSpec *godo.AppSpec) (string, error) {
+	//parse App Spec to yaml
+	newYaml, err := parser.ParseAppSpecToYaml(appSpec)
 	if err != nil {
-		return fmt.Errorf("unable to authenticate user: %s", val)
+		return "", err
 	}
-	return nil
+	tmpfile, err := ioutil.TempFile("", "_do_app_*.yaml")
+	if err != nil {
+		return "", errors.Wrap(err, "Error in creating temp file")
+	}
+	if _, err := tmpfile.Write(newYaml); err != nil {
+		tmpfile.Close()
+		return "", errors.Wrap(err, "Error in writing to temp file")
+	}
+	if err := tmpfile.Close(); err != nil {
+		return "", errors.Wrap(err, "Error in closing temp file")
+	}
+	return tmpfile.Name(), nil
 }
 
-//getCurrentDeployment returns the current deployment
-func (d *DoctlServices) getCurrentDeployment(appID string) ([]byte, error) {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
-	spec, err := cmd.Output()
-	if err != nil {
-		return nil, errors.Wrap(err, "error in retrieving list of deployments")
-	}
-	return spec, nil
-
-}
-
-//isDeployed checks for the status of deployment
-func (d *DoctlServices) isDeployed(appID string) error {
-	done := false
-	for !done {
-		fmt.Println("App Platform is Building ....")
-		spec, err := d.getCurrentDeployment(appID)
-		if err != nil {
-			return errors.Wrap(err, "error in retrieving list of deployments")
-		}
-		var app []godo.Deployment
-		err = json.Unmarshal(spec, &app)
-		if err != nil {
-			return errors.Wrap(err, "error in parsing deployment")
-		}
-		if app[0].Phase == "ACTIVE" {
-			fmt.Println("Build successful")
-			return nil
-		}
-		if app[0].Phase == "Failed" {
-			fmt.Println("Build unsuccessful")
-			return errors.Wrap(err, "build unsuccessful")
-		}
-	}
-	return nil
-}
-
-//retrieveActiveDeployment retrieves currently deployed app spec of on App Platform app
-func (d *DoctlServices) retrieveActiveDeployment(appID string) ([]byte, error) {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get --format ActiveDeployment.ID --no-header %s", appID))
-	deployID, err := cmd.Output()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to retrieve active deployment")
-	}
-	deploymentID := strings.TrimSpace(string(deployID))
-
-	//get app based on appID
-	cmd = exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
-	apps, err := cmd.Output()
-	if err != nil {
-		return nil, errors.Wrap(err, "error in retrieving currently deployed app id")
-	}
-	return apps, nil
-}
-
-//updateAppPlatformAppSpec updates app spec and creates deployment for the app
-func (d *DoctlServices) updateAppPlatformAppSpec(appID string) error {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec .do._app.yaml", appID))
-	_, err := cmd.Output()
-	if err != nil {
-		fmt.Print(err)
-		return errors.Wrap(err, "unable to update app")
-	}
-	err = d.createDeployments(appID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-//createDeployments creates deployment for the app
-func (d *DoctlServices) createDeployments(appID string) error {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
-	_, err := cmd.Output()
-	if err != nil {
-		return errors.Wrap(err, "unable to create-deployment for app")
-	}
-	return nil
-}
-
-// getAllRepo reads the file and return json object of type UpdatedRepo
-func (d *DoctlServices) getAllRepo(input string, appName string) ([]UpdatedRepo, error) {
-	//takes care of empty input for Deployment
-	if strings.TrimSpace(string(input)) == "" {
-		appID, err := d.retrieveAppID(appName)
-		if err != nil {
-			return nil, err
-		}
-		err = d.createDeployments(appID)
-		if err != nil {
-			return nil, err
-		}
-		error := d.isDeployed(appID)
-		if error != nil {
-			return nil, error
-		}
-		if error == nil {
-			os.Exit(0)
-		}
-		return nil, nil
-	}
-	var allRepos []UpdatedRepo
-	err := json.Unmarshal([]byte(input), &allRepos)
-	if err != nil {
-		return nil, errors.Wrap(err, "error in parsing json data from file")
-	}
-	return allRepos, nil
-}
-
-// checkForGitAndDockerHub Remove git and DockerHub
-func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
+// checkForGitAndDockerHub removes git, gitlab, github, DockerHub and DOCR images for the app name specified in the input json file
+func checkForGitAndDockerHub(allFiles []parser_struct.UpdatedRepo, spec *godo.AppSpec) {
+	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
+
+	//remove git, gitlab, github and dockerhub spec of services with unique name declared in input
 	for _, service := range spec.Services {
 		if !nameMap[service.Name] {
 			continue
@@ -234,6 +210,8 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 		service.GitHub = nil
 		service.Image = nil
 	}
+
+	//remove git, gitlab, github and dockerhub spec of workers with unique name declared in input
 	for _, worker := range spec.Workers {
 		if !nameMap[worker.Name] {
 			continue
@@ -243,6 +221,8 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 		worker.GitHub = nil
 		worker.Image = nil
 	}
+
+	//remove git, gitlab, github and dockerhub spec of Jobs with unique name declared in input
 	for _, job := range spec.Jobs {
 		if !nameMap[job.Name] {
 			continue
@@ -252,17 +232,20 @@ func checkForGitAndDockerHub(allFiles []UpdatedRepo, spec *godo.AppSpec) {
 		job.GitHub = nil
 		job.Image = nil
 	}
-
 }
 
 // filterApps filters git and DockerHub apps and then updates app spec with DOCR
-func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
+func filterApps(allFiles []parser_struct.UpdatedRepo, appSpec godo.AppSpec) AllError {
+	//remove all gitlab,github, git and dockerhub app info from appSpec for provided unique name component in input
 	checkForGitAndDockerHub(allFiles, &appSpec)
+
+	//iterate through all the files of the input and save names in a map
 	var nameMap = make(map[string]bool)
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
 
+	//iterate through all services, worker and job to update DOCR image in AppSpec based on unique name declared in input
 	for key := range allFiles {
 		for _, service := range appSpec.Services {
 			if service.Name != allFiles[key].Name {
@@ -292,6 +275,8 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 			job.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
 			delete(nameMap, job.Name)
 		}
+
+		//if static sites unique name is mentioned in the user input throw error as static sites do not support DOCR
 		for _, static := range appSpec.StaticSites {
 			if static.Name != allFiles[key].Name {
 				continue
@@ -301,12 +286,10 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 				}
 			}
 		}
-
 	}
 	if len(nameMap) == 0 {
 		return AllError{}
 	}
-
 	keys := make([]string, 0, len(nameMap))
 	for k := range nameMap {
 		keys = append(keys, k)
@@ -315,43 +298,4 @@ func filterApps(allFiles []UpdatedRepo, appSpec godo.AppSpec) AllError {
 		name:     "all files not found",
 		notFound: keys,
 	}
-
-}
-
-//retrieveFromDigitalocean returns the app from digitalocean
-func (d *DoctlServices) retrieveFromDigitalocean() ([]byte, error) {
-	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
-	apps, err := cmd.Output()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get user app data from digitalocean")
-	}
-	return apps, nil
-
-}
-
-// retrieveAppID retrieves app id from app platform
-func (d *DoctlServices) retrieveAppID(appName string) (string, error) {
-	apps, err := d.retrieveFromDigitalocean()
-	if err != nil {
-		return "", err
-	}
-	//parsing incoming data for AppId
-	var arr []godo.App
-	err = json.Unmarshal(apps, &arr)
-	if err != nil {
-		return "", errors.Wrap(err, "error in parsing data for AppId")
-	}
-	var appID string
-
-	for k := range arr {
-		if arr[k].Spec.Name == appName {
-			appID = arr[k].ID
-			break
-		}
-	}
-	if appID == "" {
-		return "", errors.Wrap(err, "app not found")
-	}
-
-	return appID, nil
 }

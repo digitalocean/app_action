@@ -287,7 +287,7 @@ func filterApps(allFiles []parser_struct.UpdatedRepo, appSpec godo.AppSpec) AllE
 		keys = append(keys, k)
 	}
 	return AllError{
-		name:     "all files not found",
+		name:     "all components with following names were not found in your deployed app spec",
 		notFound: keys,
 	}
 }

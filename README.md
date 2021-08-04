@@ -31,17 +31,17 @@
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       images: '[
-                        {
-                          "name": " ",
-                          "repository": " ",
-                          "tag": ""
-                        },
-                        {
-                          "name": " ",
-                          "repository": " ",
-                          "tag": " "
-                        },
-                      ]'
+                {
+                  "name": "sample-golang",
+                  "repository": "registry.digitalocean.com/sample-go/add_sample",
+                  "tag": "a5cae3e"
+                },
+                {
+                  "name": "sample-add",
+                  "repository": "registry.digitalocean.com/sample-go/worker",
+                  "tag": "d3fb1c1"
+                },
+              ]'
   ```
 - DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
 - This step will trigger a DigitalOcean App Platform deployment of your app using the images specified.
@@ -52,11 +52,11 @@
 - `app_name` - Name of the app on App Platform.
 - `images` - (optional)List of json object for providing information about name, repository and tag of the image in docr.(by default latest tag is used)
     ```json
-    {
+    [{
       "name": " ",
       "repository": " ",
       "tag": ""
-    }
+    }]
     ```
     - `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
     - `repository` - name of the DOCR repository with the following format- registry.digitalocean.com/<my-registry>/<my-image>

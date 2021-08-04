@@ -236,6 +236,8 @@ func filterApps(allFiles []parser_struct.UpdatedRepo, appSpec godo.AppSpec) AllE
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
+	//For future dockerhub integration first we need to update input json file and add parameter to specify dockerhub image and registry name
+	//then we can update code shown below to update app spec with dockerhub image
 
 	//iterate through all services, worker and job to update DOCR image in AppSpec based on unique name declared in input
 	for key := range allFiles {
@@ -245,6 +247,8 @@ func filterApps(allFiles []parser_struct.UpdatedRepo, appSpec godo.AppSpec) AllE
 			} else {
 				repos := strings.Split(allFiles[key].Repository, `/`)
 				repo := repos[len(repos)-1]
+				//check if the the image is docr or not if its not docr then add below line in all services, workers and jobs
+				//service.Image = &godo.ImageSourceSpec{RegistryType: "DOCKER_HUB", Repository:repo, Registry: registry, Tag: allFiles[key].Tag}
 				service.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
 				delete(nameMap, service.Name)
 			}

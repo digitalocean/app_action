@@ -7,7 +7,7 @@ package main
 import (
 	reflect "reflect"
 
-	parser_struct "github.com/ParamPatel207/app_action/internal/parser_struct"
+	parser_struct "github.com/digitalocean/app_action/internal/parser_struct"
 	godo "github.com/digitalocean/godo"
 	gomock "github.com/golang/mock/gomock"
 )

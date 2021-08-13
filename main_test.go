@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ParamPatel207/app_action/internal/parser"
+	"github.com/digitalocean/app_action/internal/parser"
 	"github.com/digitalocean/godo"
 	gomock "github.com/golang/mock/gomock"
 	"gopkg.in/yaml.v2"

@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ParamPatel207/app_action/internal/doctl"
-	"github.com/ParamPatel207/app_action/internal/parser"
-	"github.com/ParamPatel207/app_action/internal/parser_struct"
+	"github.com/digitalocean/app_action/internal/doctl"
+	"github.com/digitalocean/app_action/internal/parser"
+	"github.com/digitalocean/app_action/internal/parser_struct"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
 )

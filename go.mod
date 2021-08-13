@@ -1,4 +1,4 @@
-module github.com/ParamPatel207/app_action
+module github.com/digitalocean/app_action
 
 go 1.16
 

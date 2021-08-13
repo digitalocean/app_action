@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/ParamPatel207/app_action/internal/parser_struct"
+	"github.com/digitalocean/app_action/internal/parser_struct"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
-//ParseJsonInput parses updated json file to yaml
+//ParseAppSpecToYaml parses updated json file to yaml
 func ParseAppSpecToYaml(appSpec *godo.AppSpec) ([]byte, error) {
 	newYaml, err := yaml.Marshal(appSpec)
 	if err != nil {
@@ -39,7 +39,7 @@ func ParseAppSpec(apps []byte) ([]godo.App, error) {
 	return arr, nil
 }
 
-// parseJsonInput takes the array of json object as input and unique name of users app as appName
+// ParseJsonInput takes the array of json object as input and unique name of users app as appName
 //it parses the input and returns UpdatedRepo of the input
 func ParseJsonInput(input string) ([]parser_struct.UpdatedRepo, error) {
 	//takes care of empty json Deployment (use case where we redeploy using same app spec)

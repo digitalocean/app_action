@@ -12,7 +12,7 @@
 - [Create a GitHub Action workflow file](https://docs.github.com/en/actions/learn-github-actions/introduction-to-github-actions#create-an-example-workflow) and add this step below to it or add this to your existing action.
   ```yaml
   - name: DigitalOcean App Platform deployment
-    uses: ParamPatel207/app_action@main
+    uses: digitalocean/app_action@main
     with:
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -26,7 +26,7 @@
 - Add this step to update DigitalOcean Container Registry configuration of single or multiple [component]((https://www.digitalocean.com/blog/build-component-based-apps-with-digitalocean-app-platform/)) in app_spec
   ```yaml
   - name: DigitalOcean App Platform deployment
-    uses: ParamPatel207/app_action@main
+    uses: digitalocean/app_action@main
     with:
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -65,9 +65,9 @@
 - `token` - doctl authentication token (generate token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
 
 ## Example:
-Update DigitalOcean Container Registry(DOCR) configuration of single component in App Spec [example](https://github.com/ParamPatel207/docr_sample)
+Update DigitalOcean Container Registry(DOCR) configuration of single component in App Spec [example](https://github.com/digitalocean/sample-golang-docr-github-action)
 
-DigitalOcean App Platform Auto-deploy with same app spec. [example](https://github.com/ParamPatel207/sample_golang_github_action)
+DigitalOcean App Platform Auto-deploy with same app spec. [example](https://github.com/digitalocean/sample-golang-github-action)
 
 ## Resources to know more about DigitalOcean App Platform App Spec
 - [App Platform Guided App Spec Declaration](https://www.digitalocean.com/community/tech_talks/defining-your-app-specification-on-digitalocean-app-platform)

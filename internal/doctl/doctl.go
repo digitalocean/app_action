@@ -29,7 +29,7 @@ func NewClient(token string) (Client, error) {
 
 // ListDeployments takes appID as input and returns list of deployments (used to retrieve most recent deployment)
 func (d *Client) ListDeployments(appID string) ([]godo.Deployment, error) {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app list-deployments %s -ojson", appID))
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps list-deployments %s -ojson", appID))
 	spec, err := cmd.Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "error in retrieving list of deployments")
@@ -57,7 +57,7 @@ func (d *Client) RetrieveActiveDeploymentID(appID string) (string, error) {
 // RetrieveActiveDeployment takes active deployment id as input from(RetrieveActiveDeploymentID) and app id
 // returns the app spec from App Platform as *godo.AppSpec, retrieves parsed json object of the json input
 func (d *Client) RetrieveActiveDeployment(deploymentID string, appID string, input string) ([]parser_struct.UpdatedRepo, *godo.AppSpec, error) {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app get-deployment %s %s -ojson", appID, string(deploymentID)))
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps get-deployment %s %s -ojson", appID, string(deploymentID)))
 	apps, err := cmd.Output()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "error in retrieving currently deployed app id")
@@ -80,10 +80,10 @@ func (d *Client) RetrieveActiveDeployment(deploymentID string, appID string, inp
 // UpdateAppPlatformAppSpec takes appID as input
 // updates App Platform's app spec and creates deployment
 func (d *Client) UpdateAppPlatformAppSpec(tmpfile, appID string) error {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app update %s --spec %s", appID, tmpfile))
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps update %s --spec %s", appID, tmpfile))
 	_, err := cmd.Output()
 	if err != nil {
-		fmt.Printf("doctl app update %s --spec %s", appID, tmpfile)
+		fmt.Printf("doctl apps update %s --spec %s", appID, tmpfile)
 		return errors.Wrap(err, "unable to update app")
 	}
 	return nil
@@ -91,7 +91,7 @@ func (d *Client) UpdateAppPlatformAppSpec(tmpfile, appID string) error {
 
 // CreateDeployments takes app id as an input and creates deployment for the app
 func (d *Client) CreateDeployments(appID string) error {
-	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl app create-deployment %s", appID))
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("doctl apps create-deployment %s", appID))
 	_, err := cmd.Output()
 	if err != nil {
 		return errors.Wrap(err, "unable to create-deployment for app")
@@ -101,7 +101,7 @@ func (d *Client) CreateDeployments(appID string) error {
 
 // RetrieveFromDigitalocean returns the app from DigitalOcean as a slice of byte
 func (d *Client) RetrieveFromDigitalocean() ([]godo.App, error) {
-	cmd := exec.Command("sh", "-c", "doctl app list -ojson")
+	cmd := exec.Command("sh", "-c", "doctl apps list -ojson")
 	apps, err := cmd.Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get user app data from digitalocean")

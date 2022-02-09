@@ -199,7 +199,7 @@ func Test_run(t *testing.T) {
 	}
 	do.EXPECT().RetrieveActiveDeployment(gomock.Eq(activeDeploymentID), gomock.Eq(appID), gomock.Eq(sampleImages)).Return(sampleImagesRepo, deployments[0].Spec, nil)
 	do.EXPECT().UpdateAppPlatformAppSpec(gomock.Any(), appID).Return(nil)
-	do.EXPECT().CreateDeployments(appID).Return(nil)
+
 	do.EXPECT().IsDeployed(appID).Return(nil)
 
 	a := &action{

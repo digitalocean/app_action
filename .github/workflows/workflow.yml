@@ -30,7 +30,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@v2
       with:
-        go-version: '1.16.5' # The Go version to download (if necessary) and use.
+        go-version: '1.17.6' # The Go version to download (if necessary) and use.
     
     # Install all the dependencies
     - name: Install dependencies
@@ -50,7 +50,7 @@ jobs:
       needs: build
       strategy:
         matrix:
-          go-version: [1.15.x, 1.16.x]
+          go-version: [1.15.x, 1.16.x, 1.17.x]
           os: [ubuntu-latest]
       runs-on: ${{ matrix.os }}
       steps:

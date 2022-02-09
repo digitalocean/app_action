@@ -128,12 +128,6 @@ func (a *action) run() error {
 		return errors.Wrap(err, "updating app spec")
 	}
 
-	//creates a new deployment from the updated app spec
-	err = a.client.CreateDeployments(appID)
-	if err != nil {
-		return errors.Wrap(err, "creating new deployment")
-	}
-
 	//checks for deployment status
 	err = a.client.IsDeployed(appID)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/digitalocean/app_action/internal/doctl"
 	"github.com/digitalocean/app_action/internal/parser"
-	"github.com/digitalocean/app_action/internal/parser_struct"
+	parser_struct "github.com/digitalocean/app_action/internal/parser_struct"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
 )
@@ -139,7 +139,7 @@ func (a *action) run() error {
 
 //updateLocalAppSpec updates app spec based on users input and saves it in a local file called .do._app.yaml
 func (a *action) updateLocalAppSpec(input []parser_struct.UpdatedRepo, appSpec *godo.AppSpec) (string, error) {
-	//updates all the docr images based on user input
+	//updates all the container images based on user input
 	newErr := filterApps(input, *appSpec)
 	if newErr.name != "" {
 		log.Print(newErr.name)
@@ -220,7 +220,22 @@ func checkForGitAndDockerHub(allFiles []parser_struct.UpdatedRepo, spec *godo.Ap
 	}
 }
 
-// filterApps filters git and DockerHub apps and then updates app spec with DOCR
+func makeImageSpec(updatedRepo parser_struct.UpdatedRepo) *godo.ImageSourceSpec {
+
+	if updatedRepo.Image.RegistryType == "" {
+		log.Print("::warning::Updating images without an ImageSourceSpec is deprecated. Please See: https://github.com/digitalocean/app_action/issues/10")
+		repos := strings.Split(updatedRepo.Repository, `/`)
+		repo := repos[len(repos)-1]
+		return &godo.ImageSourceSpec{
+			RegistryType: "DOCR",
+			Repository:   repo,
+			Tag:          updatedRepo.Tag,
+		}
+	}
+	return &updatedRepo.Image
+}
+
+// filterApps filters git and DockerHub apps and then updates app spec with new ImageSourceSpec
 func filterApps(allFiles []parser_struct.UpdatedRepo, appSpec godo.AppSpec) AllError {
 	//remove all gitlab,github, git and dockerhub app info from appSpec for provided unique name component in input
 	checkForGitAndDockerHub(allFiles, &appSpec)
@@ -230,60 +245,65 @@ func filterApps(allFiles []parser_struct.UpdatedRepo, appSpec godo.AppSpec) AllE
 	for val := range allFiles {
 		nameMap[allFiles[val].Name] = true
 	}
-	//For future dockerhub integration first we need to update input json file and add parameter to specify dockerhub image and registry name
-	//then we can update code shown below to update app spec with dockerhub image
 
-	//iterate through all services, worker and job to update DOCR image in AppSpec based on unique name declared in input
+	//iterate through all services, worker and job to update AppSpec.ImageSourceSpec based on component name declared in input
 	for key := range allFiles {
 		for _, service := range appSpec.Services {
 			if service.Name != allFiles[key].Name {
 				continue
-			} else {
-				repos := strings.Split(allFiles[key].Repository, `/`)
-				repo := repos[len(repos)-1]
-				//check if the the image is docr or not if its not docr then add below line in all services, workers and jobs
-				//service.Image = &godo.ImageSourceSpec{RegistryType: "DOCKER_HUB", Repository:repo, Registry: registry, Tag: allFiles[key].Tag}
-				service.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
-				delete(nameMap, service.Name)
 			}
+			service.Image = makeImageSpec(allFiles[key])
+			delete(nameMap, service.Name)
 		}
 		for _, worker := range appSpec.Workers {
 			if worker.Name != allFiles[key].Name {
 				continue
 			}
-			repos := strings.Split(allFiles[key].Repository, `/`)
-			repo := repos[len(repos)-1]
-			worker.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
+
+			worker.Image = makeImageSpec(allFiles[key])
 			delete(nameMap, worker.Name)
 		}
 		for _, job := range appSpec.Jobs {
 			if job.Name != allFiles[key].Name {
 				continue
 			}
-			repos := strings.Split(allFiles[key].Repository, `/`)
-			repo := repos[len(repos)-1]
-			job.Image = &godo.ImageSourceSpec{RegistryType: "DOCR", Repository: repo, Tag: allFiles[key].Tag}
+
+			job.Image = makeImageSpec(allFiles[key])
 			delete(nameMap, job.Name)
 		}
 
-		//if static sites unique name is mentioned in the user input throw error as static sites do not support DOCR
+		//if functions component unique name is mentioned in the user input throw error as functions components do not support containers
+		for _, functions := range appSpec.Functions {
+			if functions.Name != allFiles[key].Name {
+				continue
+			}
+
+			return AllError{
+				name: fmt.Sprintf("Functions components in App Platform do not support containers: %s", functions.Name),
+			}
+		}
+		//if static sites unique name is mentioned in the user input throw error as static sites do not support containers
 		for _, static := range appSpec.StaticSites {
 			if static.Name != allFiles[key].Name {
 				continue
-			} else {
-				return AllError{
-					name: fmt.Sprintf("Static sites in App Platform do not support DOCR: %s", static.Name),
-				}
+			}
+
+			return AllError{
+				name: fmt.Sprintf("Static sites in App Platform do not support containers: %s", static.Name),
 			}
 		}
 	}
+
 	if len(nameMap) == 0 {
 		return AllError{}
 	}
+
 	keys := make([]string, 0, len(nameMap))
+
 	for k := range nameMap {
 		keys = append(keys, k)
 	}
+
 	return AllError{
 		name:     "all components with following names were not found in your deployed app spec",
 		notFound: keys,

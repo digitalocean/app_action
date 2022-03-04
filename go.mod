@@ -8,6 +8,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/stretchr/testify v1.4.0
 	golang.org/x/net v0.0.0-20220127074510-2fabfed7e28f // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

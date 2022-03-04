@@ -1,9 +1,8 @@
 # Deploy a [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform/) app using GitHub Actions.
 
  - Auto-deploy your app from source on commit, while allowing you to run tests or perform other operations before.
- - Auto-deploy your app from source and also update DigitalOcean Container Registry (DOCR) configuration in DigitalOcean [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/) and deploy application with updated DOCR image.
+ - Auto-deploy your app from source and also update DigitalOcean Container Registry (DOCR) configuration in DigitalOcean [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/) and deploy application with updated container image.
 
-**Note: This action only supports DOCR configuration changes for Auto-deploy**
 
 # Usage
 ### Deploy via GH Action and let DigitalOcean App Platform build and deploy your app.
@@ -33,29 +32,39 @@
       images: '[
                 {
                   "name": "sample-golang",
-                  "repository": "registry.digitalocean.com/sample-go/add_sample",
-                  "tag": "a5cae3e"
+                   "image":{
+                    "registry_type": "DOCR",
+                    "repository": "add_sample",
+                    "tag": "a5cae3e"
+                  },
                 },
                 {
                   "name": "sample-add",
-                  "repository": "registry.digitalocean.com/sample-go/worker",
-                  "tag": "d3fb1c1"
-                },
+                  "image":{
+                    "registry_type": "DOCKER_HUB",
+                    "registry": "nginxdemos",
+                    "repository": "hello",
+                    "tag": "0.2"
+                  },
               ]'
   ```
 - DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
 - This step will trigger a DigitalOcean App Platform deployment of your app using the images specified.
 
-**Note: Always use unique tag names to push image to the DigitalOcean Container Registry. This will allow you to deploy your application without delay. [ref](https://docs.digitalocean.com/products/container-registry/quickstart/)**
+**Note: Always use unique tag names (i.e. `1.2.3` instead of `latest`) to push image to the DigitalOcean Container Registry. This will allow you to deploy your application without delay. [ref](https://docs.digitalocean.com/products/container-registry/quickstart/)**
 
 # Inputs
 - `app_name` - Name of the app on App Platform.
-- `images` - (optional)List of json object for providing information about name, repository and tag of the image in docr.(by default latest tag is used)
+- `images` - (optional)List of json objects (of type ImageSourceSpec, see [Reference for App Specification](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)) for providing information about name, registry type, repository, and tag of the image in .
     ```json
     [{
-      "name": " ",
-      "repository": " ",
-      "tag": ""
+      "name": " ", #component name
+      "image":{ 
+        "registry_type": "DOCKER_HUB", #Registry type, DOCR and DOCKER_HUB are supported
+        "registry": "nginxdemos", # DockerHub only, the registry name
+        "repository": "hello", # repository name
+        "tag": "0.2" # tag name
+      },
     }]
     ```
     - `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)

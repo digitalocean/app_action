@@ -1,3 +1,5 @@
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
 # github.com/digitalocean/godo v1.75.0
 ## explicit
 github.com/digitalocean/godo
@@ -14,6 +16,12 @@ github.com/google/go-querystring/query
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/stretchr/testify v1.4.0
+## explicit
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/require
 # golang.org/x/net v0.0.0-20220127074510-2fabfed7e28f
 ## explicit
 golang.org/x/net/context

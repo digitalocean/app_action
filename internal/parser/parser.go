@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/digitalocean/app_action/internal/parser_struct"
+	parser_struct "github.com/digitalocean/app_action/internal/parser_struct"
 	"github.com/digitalocean/godo"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"

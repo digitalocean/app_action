@@ -169,7 +169,7 @@ func Test_run(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	appID := "2a91c9e3-253f-4c75-99e5-b81b9c3f744f"
+	appID := "3a91c9e3-253f-4c75-99e5-b81b9c3f744f"
 	activeDeploymentID := "fac38395-30f3-4c59-9e6c-3a67523f51de"
 	sampleImages := `[{
 		"name": "web",
@@ -199,7 +199,7 @@ func Test_run(t *testing.T) {
 	}
 	do.EXPECT().RetrieveActiveDeployment(gomock.Eq(activeDeploymentID), gomock.Eq(appID), gomock.Eq(sampleImages)).Return(sampleImagesRepo, deployments[0].Spec, nil)
 	do.EXPECT().UpdateAppPlatformAppSpec(gomock.Any(), appID).Return(nil)
-	do.EXPECT().CreateDeployments(appID).Return(nil)
+
 	do.EXPECT().IsDeployed(appID).Return(nil)
 
 	a := &action{
@@ -251,7 +251,6 @@ func Test_run_with_ImageSourceSpec(t *testing.T) {
 	}
 	do.EXPECT().RetrieveActiveDeployment(gomock.Eq(activeDeploymentID), gomock.Eq(appID), gomock.Eq(sampleImages)).Return(sampleImagesRepo, deployments[0].Spec, nil)
 	do.EXPECT().UpdateAppPlatformAppSpec(gomock.Any(), appID).Return(nil)
-
 	do.EXPECT().IsDeployed(appID).Return(nil)
 
 	a := &action{

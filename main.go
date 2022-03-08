@@ -223,7 +223,7 @@ func checkForGitAndDockerHub(allFiles []parser_struct.UpdatedRepo, spec *godo.Ap
 func makeImageSpec(updatedRepo parser_struct.UpdatedRepo) *godo.ImageSourceSpec {
 
 	if updatedRepo.Image.RegistryType == "" {
-		fmt.Print("::warning::Updating images without an ImageSourceSpec is deprecated. Please See: https://github.com/digitalocean/app_action/issues/10")
+		fmt.Println("::warning::Updating images without an ImageSourceSpec is deprecated. Please See: https://github.com/digitalocean/app_action/issues/10")
 		repos := strings.Split(updatedRepo.Repository, `/`)
 		repo := repos[len(repos)-1]
 		return &godo.ImageSourceSpec{

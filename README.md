@@ -1,7 +1,7 @@
 # Deploy a [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform/) app using GitHub Actions.
 
  - Auto-deploy your app from source on commit, while allowing you to run tests or perform other operations before.
- - Auto-deploy your app from source and also update DigitalOcean Container Registry (DOCR) configuration in DigitalOcean [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/) and deploy application with updated container image.
+ - Auto-deploy your app from source and also update DockerHub / DigitalOcean Container Registry (DOCR) configuration in DigitalOcean [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/) and deploy application with updated container image.
 
 
 # Usage
@@ -18,14 +18,14 @@
   ```
 - This step will trigger a deploy to your App on DigitalOcean App Platform
 
-### Deploy an one or more app components from a DigitalOcean Container Registry (DOCR) 
+### Deploy an one or more app components from a DigitalOcean Container Registry (DOCR) or DockerHub
 
 - Get DigitalOcean Personal Access token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)**(skip this step if you already have DigitalOcean Personal Access Token)**
 - Declare DigitalOcean Personal Access Token as DIGITALOCEAN_ACCESS_TOKEN variable in the [secrets](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) of github repository. 
 - Add this step to update DigitalOcean Container Registry configuration of single or multiple [component]((https://www.digitalocean.com/blog/build-component-based-apps-with-digitalocean-app-platform/)) in app_spec
   ```yaml
   - name: DigitalOcean App Platform deployment
-    uses: digitalocean/app_action@main
+    uses: digitalocean/app_action@v1.0.0 # replace this with current version from https://github.com/digitalocean/app_action/releases
     with:
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -48,7 +48,7 @@
                   },
               ]'
   ```
-- DigitalOcean App Platform will now update your DOCR information in App Spec and then deploy your application.
+- DigitalOcean App Platform will now update your container image information in App Spec and then deploy your application.
 - This step will trigger a DigitalOcean App Platform deployment of your app using the images specified.
 
 **Note: Always use unique tag names (i.e. `1.2.3` instead of `latest`) to push image to the DigitalOcean Container Registry. This will allow you to deploy your application without delay. [ref](https://docs.digitalocean.com/products/container-registry/quickstart/)**
@@ -74,7 +74,7 @@
 - `token` - doctl authentication token (generate token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
 
 ## Example:
-Update DigitalOcean Container Registry(DOCR) configuration of single component in App Spec [example](https://github.com/digitalocean/sample-golang-docr-github-action)
+Update DigitalOcean container image configuration of single component in App Spec [example](https://github.com/digitalocean/sample-golang-docr-github-action)
 
 DigitalOcean App Platform Auto-deploy with same app spec. [example](https://github.com/digitalocean/sample-golang-github-action)
 

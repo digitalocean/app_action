@@ -28,7 +28,7 @@ jobs:
     
     # Setup Go
     - name: Setup Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
         go-version: '1.18.2' # The Go version to download (if necessary) and use.
     
@@ -55,7 +55,7 @@ jobs:
       runs-on: ${{ matrix.os }}
       steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
       - name: Checkout code

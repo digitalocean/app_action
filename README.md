@@ -1,7 +1,7 @@
 # Deploy a [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform/) app using GitHub Actions.
 
  - Auto-deploy your app from source on commit, while allowing you to run tests or perform other operations before.
- - Auto-deploy your app from source and also update DockerHub / DigitalOcean Container Registry (DOCR) configuration in DigitalOcean [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/) and deploy application with updated container image.
+ - Auto-deploy your app from source and also update DockerHub / DigitalOcean Container Registry (DOCR) configuration in DigitalOcean [App Spec](https://docs.digitalocean.com/products/app-platform/reference/app-spec/) and deploy application with updated container image.
 
 
 # Usage

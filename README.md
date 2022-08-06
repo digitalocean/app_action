@@ -55,7 +55,7 @@
 
 # Inputs
 - `app_name` - Name of the app on App Platform.
-- `images` - (optional)List of json objects (of type ImageSourceSpec, see [Reference for App Specification](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)) for providing information about name, registry type, repository, and tag of the image in .
+- `images` - (optional)List of json objects (of type ImageSourceSpec, see [Reference for App Specification](https://docs.digitalocean.com/products/app-platform/reference/app-spec/)) for providing information about name, registry type, repository, and tag of the image in .
     ```json
     [{
       "name": " ", #component name
@@ -67,7 +67,7 @@
       },
     }]
     ```
-    - `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+    - `name` - name of the component in [App Spec](https://docs.digitalocean.com/products/app-platform/reference/app-spec/)
     - `repository` - name of the DOCR repository with the following format- registry.digitalocean.com/<my-registry>/<my-image>
     - `tag` - tag of the image provided while pushing to DOCR (by default latest tag is used). 
     **We suggest always use unique tag value)**
@@ -80,7 +80,7 @@ DigitalOcean App Platform Auto-deploy with same app spec. [example](https://gith
 
 ## Resources to know more about DigitalOcean App Platform App Spec
 - [App Platform Guided App Spec Declaration](https://www.digitalocean.com/community/tech_talks/defining-your-app-specification-on-digitalocean-app-platform)
-- [App Platform App Spec Blog](https://docs.digitalocean.com/products/app-platform/references/app-specification-reference/)
+- [App Platform App Spec Blog](https://docs.digitalocean.com/products/app-platform/reference/app-spec/)
 - [App Platform App Spec Components](https://www.digitalocean.com/blog/build-component-based-apps-with-digitalocean-app-platform/)
 
 ## Note for handling DigitalOcean Container Registry images: 

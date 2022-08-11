@@ -13,7 +13,8 @@ on:
     branches:
     - main
     - go_attempt
-
+env:
+  GO_VERSION_TO_USE: '^1.19.0'  # The Go version to download (if necessary) and use.
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # The "build" workflow
@@ -30,7 +31,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@v3
       with:
-        go-version: '1.18.2' # The Go version to download (if necessary) and use.
+        go-version: ${{ env.GO_VERSION_TO_USE }}
     
     # Install all the dependencies
     - name: Install dependencies
@@ -48,16 +49,12 @@ jobs:
   test:
     # This job will run after the build job completes
       needs: build
-      strategy:
-        matrix:
-          go-version: [1.18.x]
-          os: [ubuntu-latest]
-      runs-on: ${{ matrix.os }}
+      runs-on: ubuntu-latest
       steps:
       - name: Install Go
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version:  ${{ env.GO_VERSION_TO_USE }}
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Test

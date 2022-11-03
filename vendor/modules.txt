@@ -1,4 +1,4 @@
-# github.com/digitalocean/godo v1.83.0
+# github.com/digitalocean/godo v1.89.0
 ## explicit; go 1.18
 github.com/digitalocean/godo
 github.com/digitalocean/godo/metrics
@@ -14,7 +14,7 @@ github.com/google/go-querystring/query
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-# golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
+# golang.org/x/net v0.0.0-20220921155015-db77216a4ee9
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -22,6 +22,9 @@ golang.org/x/net/context/ctxhttp
 ## explicit; go 1.11
 golang.org/x/oauth2
 golang.org/x/oauth2/internal
+# golang.org/x/time v0.0.0-20220922220347-f3bd1da661af
+## explicit
+golang.org/x/time/rate
 # google.golang.org/appengine v1.6.7
 ## explicit; go 1.11
 google.golang.org/appengine/internal

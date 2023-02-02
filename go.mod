@@ -3,7 +3,7 @@ module github.com/digitalocean/app_action
 go 1.18
 
 require (
-	github.com/digitalocean/godo v1.92.0
+	github.com/digitalocean/godo v1.96.0
 	github.com/golang/mock v1.6.0
 	github.com/pkg/errors v0.9.1
 	gopkg.in/yaml.v2 v2.4.0

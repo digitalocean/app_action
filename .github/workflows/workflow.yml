@@ -29,7 +29,7 @@ jobs:
     
     # Setup Go
     - name: Setup Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: ${{ env.GO_VERSION_TO_USE }}
     
@@ -52,7 +52,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
       - name: Install Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version:  ${{ env.GO_VERSION_TO_USE }}
       - name: Checkout code

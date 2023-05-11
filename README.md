@@ -11,7 +11,7 @@
 - [Create a GitHub Action workflow file](https://docs.github.com/en/actions/learn-github-actions/introduction-to-github-actions#create-an-example-workflow) and add this step below to it or add this to your existing action.
   ```yaml
   - name: DigitalOcean App Platform deployment
-    uses: digitalocean/app_action@main
+    uses: digitalocean/app_action@v1.1.5
     with:
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -25,7 +25,7 @@
 - Add this step to update DigitalOcean Container Registry configuration of single or multiple [component]((https://www.digitalocean.com/blog/build-component-based-apps-with-digitalocean-app-platform/)) in app_spec
   ```yaml
   - name: DigitalOcean App Platform deployment
-    uses: digitalocean/app_action@v1.0.0 # replace this with current version from https://github.com/digitalocean/app_action/releases
+    uses: digitalocean/app_action@v1.1.5 # replace this with current version from https://github.com/digitalocean/app_action/releases
     with:
       app_name: my_DO_app
       token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -51,7 +51,7 @@
 - DigitalOcean App Platform will now update your container image information in App Spec and then deploy your application.
 - This step will trigger a DigitalOcean App Platform deployment of your app using the images specified.
 
-**Note: Always use unique tag names (i.e. `1.2.3` instead of `latest`) to push image to the DigitalOcean Container Registry. This will allow you to deploy your application without delay. [ref](https://docs.digitalocean.com/products/container-registry/quickstart/)**
+**Note: Always use unique tag names (i.e. `v1.1.15` instead of `latest` or `main`) to push image to the DigitalOcean Container Registry. This will allow you to deploy your application without delay. [ref](https://docs.digitalocean.com/products/container-registry/quickstart/)**
 
 # Inputs
 - `app_name` - Name of the app on App Platform.

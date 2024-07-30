@@ -45,12 +45,6 @@ autolabeler:
   - label: "documentation"
     files:
       - "**/*.md"
-  - label: "enhancement"
-    files:
-      - "**/*.go"
   - label: "maintenance"
     files:
       - ".github/**/*"
-      - "Dockerfile"
-      - "go.mod"
-      - "go.sum"

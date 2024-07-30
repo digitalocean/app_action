@@ -5,7 +5,7 @@ Deploy an app from source (including the configuration) on commit, while allowin
 - Supports picking up an in-repository (or filesystem really) `app.yaml` (defaults to `.do/app.yaml`, configurable via the `app_spec_location` input) to create the app from instead of having to rely on an already existing app that's then downloaded (though that is still supported). The in-filesystem app spec can also be templated with environment variables automatically (see examples below).
 - Prints the build and deploy logs into the Github Action log on demand (configurable via `print_build_logs` and `print_deploy_logs`) and surfaces them as outputs `build_logs` and `deploy_logs`.
 - Provides the app's metadata as the output `app`.
-- Supports a "preview mode" geared towards orchestrating per-PR app previews. It can be enabled via `deploy_pr_review`, see the [Implementing Preview Apps](#implementing-preview-apps) example.
+- Supports a "preview mode" geared towards orchestrating per-PR app previews. It can be enabled via `deploy_pr_review`, see the [Implementing Preview Apps](#launch-a-preview-app-per-pull-request) example.
 
 ## Support
 
@@ -54,7 +54,7 @@ services:
 - name: sample
   github:
     branch: main
-    repo: digitalocean/app_action_example
+    repo: digitalocean/sample-nodejs
 ```
 
 The following action deploys the app whenever a new commit is pushed to the main branch. Note that `deploy_on_push` is **not** used here, since the Github Action is the driving force behind the deployment. Also note that updates to `.do/app.yaml` will automatically be applied to the app.
@@ -87,7 +87,7 @@ services:
   image:
     registry_type: GHCR
     registry: digitalocean
-    repository: app_action_example
+    repository: sample-nodejs
     digest: ${SAMPLE_DIGEST}
 ```
 
@@ -133,7 +133,18 @@ jobs:
 
 ### Launch a preview app per pull request
 
-With the following 2 actions, you can implement a "Preview Apps" feature, that provide a per-PR app to check if the deployment **would** work. If the deployment succeeds, a comment is posted with the live URL of the app. If the deployment fails, a link to the respective action run is posted alongside the build and deployment logs for quick debugging.
+With the following contents of `.do/app.yaml` in the repository:
+
+```yaml
+name: sample
+services:
+- name: sample
+  github:
+    branch: main
+    repo: digitalocean/sample-nodejs
+```
+
+The following 2 actions implement a "Preview Apps" feature, that provide a per-PR app to check if the deployment **would** work. If the deployment succeeds, a comment is posted with the live URL of the app. If the deployment fails, a link to the respective action run is posted alongside the build and deployment logs for quick debugging.
 
 Once the PR is closed or merged, the respective app is deleted again.
 

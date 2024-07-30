@@ -174,7 +174,7 @@ func (d *deployer) deploy(ctx context.Context, spec *godo.AppSpec) (*godo.App, e
 		if err != nil {
 			return nil, fmt.Errorf("failed to get app after it failed: %w", err)
 		}
-		return app, fmt.Errorf("deployment failed: %s", dep.Phase)
+		return app, fmt.Errorf("deployment failed in phase %q", dep.Phase)
 	}
 
 	app, err = d.waitForAppLiveURL(ctx, app.ID)
@@ -251,15 +251,15 @@ func (d *deployer) waitForAppLiveURL(ctx context.Context, appID string) (*godo.A
 }
 
 // getLogs retrieves the logs from the given historic URLs.
-func (d *deployer) getLogs(ctx context.Context, appID, deploymentID string, typ godo.AppLogType) ([]byte, error) {
-	logsResp, resp, err := d.apps.GetLogs(ctx, appID, deploymentID, "", typ, true, -1)
+func (d *deployer) getLogs(ctx context.Context, appID, deploymentID string, logType godo.AppLogType) ([]byte, error) {
+	logsResp, resp, err := d.apps.GetLogs(ctx, appID, deploymentID, "", logType, true, -1)
 	if err != nil {
 		// Ignore if we get a 400, as this means the respective state was never reached or skipped.
 		if resp.StatusCode == http.StatusBadRequest {
 			return nil, nil
 		}
 
-		return nil, fmt.Errorf("failed to get deploy logs: %w", err)
+		return nil, fmt.Errorf("failed to get %s logs: %w", logType, err)
 	}
 
 	var buf bytes.Buffer

@@ -227,7 +227,7 @@ It is strongly suggested to use image digests to identify a specific image like 
 
 ## Upgrade from v1.x
 
-The v1 branch of this action is no longer under active development. Its documentation is [still available](README_v1.md) though.
+The v1 branch of this action is no longer under active development. Its documentation is [still available](https://github.com/digitalocean/app_action/blob/v1/README.md) though.
 
 The new deploy action does not support the `images` input from the old action. For in-repository app specs, it's suggested to use env-var-substitution as in the example above. If the spec of an existing app should be updated via the backwards-compatible `app_name` input, the `IMAGE_DIGEST_$component-name`/`IMAGE_TAG_$component-name` environment variables can be used to change the respective fields of the image reference.
 

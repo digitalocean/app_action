@@ -1,6 +1,6 @@
 module github.com/digitalocean/app_action
 
-go 1.22
+go 1.22.5
 
 require (
 	github.com/digitalocean/godo v1.119.0

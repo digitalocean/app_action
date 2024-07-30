@@ -27,9 +27,11 @@ func main() {
 	// Mask the DO token to avoid accidentally leaking it.
 	a.AddMask(in.token)
 
+	do := godo.NewFromToken(in.token)
+	do.UserAgent = "do-app-action-deploy"
 	d := &deployer{
 		action:     a,
-		apps:       godo.NewFromToken(in.token).Apps,
+		apps:       do.Apps,
 		httpClient: http.DefaultClient,
 		inputs:     in,
 	}

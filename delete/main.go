@@ -29,7 +29,8 @@ func main() {
 		a.Fatalf("failed to get GitHub context: %v", err)
 	}
 
-	do := godo.NewFromToken(in.token).Apps
+	do := godo.NewFromToken(in.token)
+	do.UserAgent = "do-app-action-delete"
 
 	appID := in.appID
 	if appID == "" {
@@ -39,7 +40,7 @@ func main() {
 			appName = utils.GenerateAppName(repoOwner, repo, ghCtx.RefName)
 		}
 
-		app, err := utils.FindAppByName(ctx, do, appName)
+		app, err := utils.FindAppByName(ctx, do.Apps, appName)
 		if err != nil {
 			a.Fatalf("failed to find app: %v", err)
 		}
@@ -53,7 +54,7 @@ func main() {
 		appID = app.ID
 	}
 
-	if resp, err := do.Delete(ctx, appID); err != nil {
+	if resp, err := do.Apps.Delete(ctx, appID); err != nil {
 		if resp.StatusCode == http.StatusNotFound && in.ignoreNotFound {
 			a.Infof("app %q not found, ignoring", appID)
 			return

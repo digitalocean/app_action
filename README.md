@@ -88,8 +88,8 @@ services:
 - name: sample
   image:
     registry_type: GHCR
-    registry: digitalocean
-    repository: sample-nodejs
+    registry: YOUR_ORG
+    repository: YOUR_REPO
     digest: ${SAMPLE_DIGEST}
 ```
 

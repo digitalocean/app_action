@@ -73,7 +73,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Deploy the app
-        uses: digitalocean/app_action/deploy@main
+        uses: digitalocean/app_action/deploy@v2
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 ```
@@ -126,7 +126,7 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
       - name: Deploy the app
-        uses: digitalocean/app_action/deploy@main
+        uses: digitalocean/app_action/deploy@v2
         env:
           SAMPLE_DIGEST: ${{ steps.push.outputs.digest }}
         with:
@@ -169,7 +169,7 @@ jobs:
         uses: actions/checkout@v4
       - name: Deploy the app
         id: deploy
-        uses: digitalocean/app_action/deploy@main
+        uses: digitalocean/app_action/deploy@v2
         with:
           deploy_pr_preview: "true"
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
@@ -227,7 +227,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: delete preview app
-        uses: digitalocean/app_action/delete@main
+        uses: digitalocean/app_action/delete@v2
         with:
           from_pr_preview: "true"
           ignore_not_found: "true"

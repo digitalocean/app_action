@@ -27,4 +27,5 @@ inputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/digitalocean/app_action/delete@sha256:53fa5250bf552f9d142e82771d1321310b916b6fc73556fa01b3d850ab52fe9f
+  image: ../Dockerfile
+  args: ['delete']

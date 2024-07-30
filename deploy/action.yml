@@ -39,4 +39,5 @@ outputs:
 
 runs:
   using: docker
-  image: docker://ghcr.io/digitalocean/app_action/deploy@sha256:eca1adbef40ca652a628f8ba7d5376ab458c996e4e42115591cdb548550fc96d
+  image: ../Dockerfile
+  args: ['deploy']

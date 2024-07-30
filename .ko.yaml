@@ -1,0 +1,3 @@
+# This is necessary as the deploy action needs access to the filesystem and the default non-root
+# user makes that difficult.
+defaultBaseImage: alpine:latest

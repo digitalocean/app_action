@@ -47,9 +47,10 @@ autolabeler:
       - "**/*.md"
   - label: "enhancement"
     files:
-      - "internal/**/*"
+      - "**/*.go"
   - label: "maintenance"
     files:
       - ".github/**/*"
-      - "vendor/**/*"
-      - "testdata/**/*"
+      - ".ko.yaml"
+      - "go.mod"
+      - "go.sum"

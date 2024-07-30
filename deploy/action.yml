@@ -1,0 +1,42 @@
+name: DigitalOcean App Platform deployment
+description: Deploy an application to DigitalOcean's App Platform.
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+
+inputs:
+  token:
+    description: DigitalOcean Personal Access Token. See https://docs.digitalocean.com/reference/api/create-personal-access-token/ for creating a new token.
+    required: true
+  app_spec_location:
+    description: Location of the app spec file. Mutually exclusive with `app_name`.
+    required: false
+    default: '.do/app.yaml'
+  app_name:
+    description: Name of the app to pull the spec from. The app must already exist. If an app name is given, a potential in-repository app spec is ignored.
+    required: false
+    default: ''
+  print_build_logs:
+    description: Print build logs.
+    required: false
+    default: 'false'
+  print_deploy_logs:
+    description: Print deploy logs.
+    required: false
+    default: 'false'
+  deploy_pr_preview:
+    description: Deploy the app as a PR preview. The app name will be derived from the PR, the app spec will be mangled to exclude conflicting configuration like domains and alerts and all Github references to the current repository will be updated to point to the PR's branch.
+    required: false
+    default: 'false'
+
+outputs:
+  app:
+    description: A JSON representation of the entire app after the deployment.
+  build_logs:
+    description: The builds logs of the deployment.
+  deploy_logs:
+    description: The deploy logs of the deployment.
+
+runs:
+  using: docker
+  image: docker://ghcr.io/digitalocean/app_action/deploy@sha256:eca1adbef40ca652a628f8ba7d5376ab458c996e4e42115591cdb548550fc96d

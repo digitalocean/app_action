@@ -74,6 +74,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Deploy the app
         uses: digitalocean/app_action/deploy@main
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 ```
 
 ### Deploy an app with a prebuilt image
@@ -111,14 +113,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Log in to the Container registry
-        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
+        uses: docker/login-action@v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         id: push
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        uses: docker/build-push-action@v6.5.0
         with:
           context: .
           push: true

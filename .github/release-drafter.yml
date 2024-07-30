@@ -51,6 +51,6 @@ autolabeler:
   - label: "maintenance"
     files:
       - ".github/**/*"
-      - ".ko.yaml"
+      - "Dockerfile"
       - "go.mod"
       - "go.sum"

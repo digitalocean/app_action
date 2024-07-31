@@ -1,0 +1,31 @@
+name: DigitalOcean App Platform app delete
+description: Delete an application from DigitalOcean's App Platform.
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+
+inputs:
+  token:
+    description: DigitalOcean Personal Access Token. See https://docs.digitalocean.com/reference/api/create-personal-access-token/ for creating a new token.
+    required: true
+  app_id:
+    description: ID of the app to delete.
+    required: false
+    default: ''
+  app_name:
+    description: Name of the app to delete.
+    required: false
+    default: ''
+  from_pr_preview:
+    description: Use this if the app was deployed as a PR preview. The app name will be derived from the PR number.
+    required: false
+    default: 'false'
+  ignore_not_found:
+    description: Ignore if the app is not found.
+    required: false
+    default: 'false'
+
+runs:
+  using: docker
+  image: ../Dockerfile
+  args: ['delete']

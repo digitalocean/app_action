@@ -45,11 +45,6 @@ autolabeler:
   - label: "documentation"
     files:
       - "**/*.md"
-  - label: "enhancement"
-    files:
-      - "internal/**/*"
   - label: "maintenance"
     files:
       - ".github/**/*"
-      - "vendor/**/*"
-      - "testdata/**/*"

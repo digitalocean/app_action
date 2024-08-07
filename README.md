@@ -242,7 +242,36 @@ It is strongly suggested to use image digests to identify a specific image like 
 
 The v1 branch of this action is no longer under active development. Its documentation is [still available](https://github.com/digitalocean/app_action/blob/v1/README.md) though.
 
-The new deploy action does not support the `images` input from the old action. For in-repository app specs, it's suggested to use env-var-substitution as in the example above. If the spec of an existing app should be updated via the backwards-compatible `app_name` input, the `IMAGE_DIGEST_$component-name`/`IMAGE_TAG_$component-name` environment variables can be used to change the respective fields of the image reference.
+To upgrade, the reference to the action has to be changed from `digitalocean/app_action@v1.x.x` to `digitalocean/app_action/deploy@v2.x.x` (note the new `deploy` part of the path).
+
+### Updating images
+
+The new deploy action does not support the `images` input from the old action. For in-repository app specs, it's suggested to use env-var-substitution as in the example above. 
+
+If the spec of an existing app should be updated via the backwards-compatible `app_name` input, the `IMAGE_DIGEST_$component-name` environment variable can be used to update the `digest` field and the `IMAGE_TAG_$component-name` environment variables can be used to update the `tag` field of a component's image reference.
+
+```yaml
+name: sample-app
+services:
+- name: sample-service
+  image:
+    registry_type: GHCR
+    registry: YOUR_ORG
+    repository: YOUR_REPO
+    tag: v1
+```
+
+```yaml
+- name: Deploy the app
+  uses: digitalocean/app_action/deploy@v2
+  env:
+    IMAGE_TAG_SAMPLE_SERVICE: v2
+  with:
+    token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+    app_name: sample-app
+```
+
+In this example, the tag of the referenced image (hence the `IMAGE_TAG_` prefix) of the `sample-service` will be updated from `v1` to `v2`. Service names are translated to environment variable names by uppercasing them and by replacing dashes with underscores (`service-name` to `SERVICE_NAME` in this case).
 
 ## Resources to know more about DigitalOcean App Platform App Spec
 

@@ -11,4 +11,9 @@ jobs:
         with:
           go-version: '1.22.5'
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - run: go test ./...
+      - name: Run tests
+        run: go test ./...
+      - name: Verify the image builds successfully
+        uses: docker/build-push-action@16ebe778df0e7752d2cfcbd924afdbbd89c1a755 # v6.6.1
+        with:
+          context: .

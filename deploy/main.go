@@ -120,7 +120,7 @@ func (d *deployer) deploy(ctx context.Context, spec *godo.AppSpec) (*godo.App, e
 		}
 	} else {
 		d.action.Infof("app %q already exists, updating...", spec.Name)
-		app, _, err = d.apps.Update(ctx, app.GetID(), &godo.AppUpdateRequest{Spec: spec})
+		app, _, err = d.apps.Update(ctx, app.GetID(), &godo.AppUpdateRequest{Spec: spec, UpdateAllSourceVersions: true})
 		if err != nil {
 			return nil, fmt.Errorf("failed to update app: %w", err)
 		}

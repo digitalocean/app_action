@@ -4,7 +4,7 @@ go 1.22.5
 
 require (
 	github.com/digitalocean/godo v1.120.0
-	github.com/sethvargo/go-githubactions v1.2.0
+	github.com/sethvargo/go-githubactions v1.3.0
 	github.com/stretchr/testify v1.9.0
 	sigs.k8s.io/yaml v1.4.0
 )

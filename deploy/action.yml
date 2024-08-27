@@ -12,6 +12,10 @@ inputs:
     description: Location of the app spec file. Mutually exclusive with `app_name`.
     required: false
     default: '.do/app.yaml'
+  project_id:
+    description: ID of the project to deploy the app to. If not given, the app will be deployed to the default project.
+    required: false
+    default: ''
   app_name:
     description: Name of the app to pull the spec from. The app must already exist. If an app name is given, a potential in-repository app spec is ignored.
     required: false

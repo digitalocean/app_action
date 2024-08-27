@@ -19,6 +19,7 @@ If you require assistance or have a feature idea, please create a support ticket
 
 - `token`: DigitalOcean Personal Access Token. See https://docs.digitalocean.com/reference/api/create-personal-access-token/ for creating a new token.
 - `app_spec_location`: Location of the app spec file. Defaults to `.do/app.yaml`.
+- `project_id`: ID of the project to deploy the app to. If not given, the app will be deployed to the default project.
 - `app_name`: Name of the app to pull the spec from. The app must already exist. If an app name is given, a potential in-repository app spec is ignored.
 - `print_build_logs`: Print build logs. Defaults to `false`.
 - `print_deploy_logs`: Print deploy logs. Defaults to `false`.

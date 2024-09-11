@@ -45,7 +45,7 @@ If you require assistance or have a feature idea, please create a support ticket
 
 As a prerequisite for all examples, you'll need a `DIGITALOCEAN_ACCESS_TOKEN`[secret](https://docs.github.com/en/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository) in the respective repository. If not already done, get a DigitalOcean Personal Access token by following this [instructions](https://docs.digitalocean.com/reference/api/create-personal-access-token/) and declare it as that secret in the repository you're working with.
 
-### Deploy an app
+### Deploy an app (with a referenced secret)
 
 With the following contents of `.do/app.yaml` in the repository:
 
@@ -53,12 +53,18 @@ With the following contents of `.do/app.yaml` in the repository:
 name: sample
 services:
 - name: sample
+  envs:
+  - key: SOME_SECRET
+    value: ${SOME_SECRET_FROM_REPOSITORY}
+    type: SECRET
   github:
     branch: main
     repo: digitalocean/sample-nodejs
 ```
 
-The following action deploys the app whenever a new commit is pushed to the main branch. Note that `deploy_on_push` is **not** used here, since the Github Action is the driving force behind the deployment. Also note that updates to `.do/app.yaml` will automatically be applied to the app.
+The following action deploys the app whenever a new commit is pushed to the main branch. Note that `deploy_on_push` is **not** used here, since the Github Action is the driving force behind the deployment. Updates to `.do/app.yaml` will automatically be applied to the app.
+
+In this case, a secret of the repository named `SOME_SECRET_FROM_REPOSITORY` will also be passed into the app via its environment variables as `SOME_SECRET`. It is passed to the action's environment via the `${{ secrets.KEY }}` notation and then substituted into the spec itself via the environment variable reference in `value`. Make sure to define the respective env var's type as `SECRET` in the spec to ensure the value is stored in an encrypted way.
 
 ```yaml
 name: Update App
@@ -75,6 +81,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Deploy the app
         uses: digitalocean/app_action/deploy@v2
+        env:
+          SOME_SECRET_FROM_REPOSITORY: ${{ secrets.SOME_SECRET_FROM_REPOSITORY }}
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 ```

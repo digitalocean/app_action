@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -18,9 +19,13 @@ import (
 // - Setting the reference of all relevant components to point to the PRs ref.
 func SanitizeSpecForPullRequestPreview(spec *godo.AppSpec, ghCtx *gha.GitHubContext) error {
 	repoOwner, repo := ghCtx.Repo()
+	prRef, err := PRRefFromContext(ghCtx)
+	if err != nil {
+		return fmt.Errorf("failed to get PR number: %w", err)
+	}
 
 	// Override app name to something that identifies this PR.
-	spec.Name = GenerateAppName(repoOwner, repo, ghCtx.RefName)
+	spec.Name = GenerateAppName(repoOwner, repo, prRef)
 
 	// Unset any domains as those might collide with production apps.
 	spec.Domains = nil
@@ -68,4 +73,21 @@ func GenerateAppName(repoOwner, repo, ref string) string {
 	}
 
 	return baseName[:limit] + suffix
+}
+
+// PRRefFromContext extracts the PR number from the given GitHub context.
+// It mimics the RefName attribute that GitHub Actions provides but is also available
+// on merge events, which isn't the case for the RefName attribute.
+// See: https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request.
+func PRRefFromContext(ghCtx *gha.GitHubContext) (string, error) {
+	prFields, ok := ghCtx.Event["pull_request"].(map[string]any)
+	if !ok {
+		return "", fmt.Errorf("pull_request field didn't exist on event: %v", ghCtx.Event)
+	}
+	// The event is parsed as a JSON object and Golang represents numbers as float64.
+	prNumber, ok := prFields["number"].(float64)
+	if !ok {
+		return "", errors.New("missing pull request number")
+	}
+	return fmt.Sprintf("%d/merge", int(prNumber)), nil
 }

@@ -37,7 +37,11 @@ func main() {
 		appName := in.appName
 		if appName == "" {
 			repoOwner, repo := ghCtx.Repo()
-			appName = utils.GenerateAppName(repoOwner, repo, ghCtx.RefName)
+			prRef, err := utils.PRRefFromContext(ghCtx)
+			if err != nil {
+				a.Fatalf("failed to get PR number: %v", err)
+			}
+			appName = utils.GenerateAppName(repoOwner, repo, prRef)
 		}
 
 		app, err := utils.FindAppByName(ctx, do.Apps, appName)

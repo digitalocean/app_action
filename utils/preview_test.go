@@ -56,8 +56,12 @@ func TestSanitizeSpecForPullRequestPreview(t *testing.T) {
 
 	ghCtx := &gha.GitHubContext{
 		Repository: "foo/bar",
-		RefName:    "3/merge",
 		HeadRef:    "feature-branch",
+		Event: map[string]any{
+			"pull_request": map[string]any{
+				"number": float64(3),
+			},
+		},
 	}
 
 	err := SanitizeSpecForPullRequestPreview(spec, ghCtx)

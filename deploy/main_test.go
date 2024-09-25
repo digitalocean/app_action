@@ -20,6 +20,10 @@ import (
 func TestCreateSpecFromFile(t *testing.T) {
 	spec := &godo.AppSpec{
 		Name: "foo",
+		Envs: []*godo.AppVariableDefinition{{
+			Key:   "GLOBAL_ENV_VAR",
+			Value: "${APP_DOMAIN}",
+		}},
 		Services: []*godo.AppServiceSpec{{
 			Name: "web",
 			Image: &godo.ImageSourceSpec{
@@ -28,6 +32,10 @@ func TestCreateSpecFromFile(t *testing.T) {
 				Repository:   "bar",
 				Tag:          "${ENV_VAR}",
 			},
+			Envs: []*godo.AppVariableDefinition{{
+				Key:   "SERVICE_ENV_VAR",
+				Value: "${web2.HOSTNAME}",
+			}},
 		}, {
 			Name: "web2",
 			Image: &godo.ImageSourceSpec{
@@ -61,6 +69,10 @@ func TestCreateSpecFromFile(t *testing.T) {
 
 	expected := &godo.AppSpec{
 		Name: "foo",
+		Envs: []*godo.AppVariableDefinition{{
+			Key:   "GLOBAL_ENV_VAR",
+			Value: "${APP_DOMAIN}", // Bindable reference stayed intact.
+		}},
 		Services: []*godo.AppServiceSpec{{
 			Name: "web",
 			Image: &godo.ImageSourceSpec{
@@ -69,6 +81,10 @@ func TestCreateSpecFromFile(t *testing.T) {
 				Repository:   "bar",
 				Tag:          "v1", // Tag was updated.
 			},
+			Envs: []*godo.AppVariableDefinition{{
+				Key:   "SERVICE_ENV_VAR",
+				Value: "${web2.HOSTNAME}", // Bindable reference stayed intact.
+			}},
 		}, {
 			Name: "web2",
 			Image: &godo.ImageSourceSpec{

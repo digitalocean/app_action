@@ -93,7 +93,7 @@ func (d *deployer) createSpec(ctx context.Context) (*godo.AppSpec, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get app spec content: %w", err)
 		}
-		appSpecExpanded := os.ExpandEnv(string(appSpec))
+		appSpecExpanded := utils.ExpandEnvRetainingBindables(string(appSpec))
 		if err := yaml.Unmarshal([]byte(appSpecExpanded), &spec); err != nil {
 			return nil, fmt.Errorf("failed to parse app spec: %w", err)
 		}

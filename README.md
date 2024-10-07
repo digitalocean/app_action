@@ -66,7 +66,7 @@ The following action deploys the app whenever a new commit is pushed to the main
 
 In this case, a secret of the repository named `SOME_SECRET_FROM_REPOSITORY` will also be passed into the app via its environment variables as `SOME_SECRET`. It is passed to the action's environment via the `${{ secrets.KEY }}` notation and then substituted into the spec itself via the environment variable reference in `value`. Make sure to define the respective env var's type as `SECRET` in the spec to ensure the value is stored in an encrypted way.
 
-**Note:** `APP_DOMAIN`, `APP_URL` and `APP_NAME` are predefined [App-wide variables](https://docs.digitalocean.com/products/app-platform/how-to/use-environment-variables/#app-wide-variables). Avoid overriding them in the action's environment to avoid the env-var-expansion process of the Github Action to interfere with that of the platform itself.
+**Note:** `APP_DOMAIN`, `APP_URL` and `APP_ID` are predefined [App-wide variables](https://docs.digitalocean.com/products/app-platform/how-to/use-environment-variables/#app-wide-variables). Avoid overriding them in the action's environment to avoid the env-var-expansion process of the Github Action to interfere with that of the platform itself.
 
 ```yaml
 name: Update App

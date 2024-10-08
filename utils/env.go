@@ -11,7 +11,7 @@ import (
 var appWideVariables = map[string]struct{}{
 	"APP_DOMAIN": {},
 	"APP_URL":    {},
-	"APP_NAME":   {},
+	"APP_ID":   {},
 }
 
 // ExpandEnvRetainingBindables expands the environment variables in s, but it

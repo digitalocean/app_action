@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
-          go-version: '1.22.5'
+          go-version: "1.23.4"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Run tests
         run: go test ./...
@@ -17,3 +17,7 @@ jobs:
         uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
         with:
           context: .
+          push: true
+          tags: ${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

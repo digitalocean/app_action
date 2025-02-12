@@ -59,6 +59,7 @@ func GenerateAppName(repoOwner, repo, ref string) string {
 		"/", "-", // Replace slashes.
 		":", "", // Colons are illegal.
 		"_", "-", // Underscores are illegal.
+		".", "-", // Dots are illegal.
 	).Replace(baseName)
 
 	// Generate a hash from the unique enumeration of repoOwner, repo, and ref.

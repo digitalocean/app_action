@@ -38,7 +38,7 @@ If you require assistance or have a feature idea, please create a support ticket
 - `token`: DigitalOcean Personal Access Token. See https://docs.digitalocean.com/reference/api/create-personal-access-token/ for creating a new token.
 - `app_id`: ID of the app to delete.
 - `app_name`: Name of the app to delete.
-- `from_pr_preview`: Use this if the app was deployed as a PR preview. The app name will be derived from the PR and.
+- `from_pr_preview`: Use this if the app was deployed as a PR preview. The app name will be derived from a combination of the repo name and the PR.
 - `ignore_not_found`: Ignore if the app is not found.
 
 ## Usage

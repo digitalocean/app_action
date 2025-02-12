@@ -139,6 +139,12 @@ func TestGenerateAppName(t *testing.T) {
 		repo:      "thisisanextremelylongreponame",
 		ref:       "3/merge",
 		expected:  "foo-thisisanextremelylo-67dbc40d",
+	}, {
+		name:      "repo with hostname",
+		repoOwner: "foo",
+		repo:      "my.domain.com",
+		ref:       "3/merge",
+		expected:  "foo-my-domain-com-3-mer-b5e0d686",
 	}}
 
 	for _, test := range tests {

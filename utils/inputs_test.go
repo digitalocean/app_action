@@ -43,15 +43,14 @@ func TestInputAsString(t *testing.T) {
 					return "unexpected"
 				}
 			}))
-			target := new(string)
-			err := InputAsString(a, test.input, test.required, target)
-			if err != nil && !test.err {
+			var target string
+			err := InputAsString(a, test.input, test.required, &target)
+			if !test.err {
 				require.NoError(t, err)
-			}
-			if err == nil && test.err {
+			} else {
 				require.Error(t, err)
 			}
-			require.Equal(t, test.expected, *target)
+			require.Equal(t, test.expected, target)
 		})
 	}
 }
@@ -99,15 +98,14 @@ func TestInputAsBool(t *testing.T) {
 					return "unexpected"
 				}
 			}))
-			target := new(bool)
-			err := InputAsBool(a, test.input, test.required, target)
-			if err != nil && !test.err {
+			var target bool
+			err := InputAsBool(a, test.input, test.required, &target)
+			if !test.err {
 				require.NoError(t, err)
-			}
-			if err == nil && test.err {
+			} else {
 				require.Error(t, err)
 			}
-			require.Equal(t, test.expected, *target)
+			require.Equal(t, test.expected, target)
 		})
 	}
 }

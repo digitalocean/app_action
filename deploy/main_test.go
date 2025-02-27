@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/digitalocean/godo"
@@ -96,9 +95,7 @@ func TestCreateSpecFromFile(t *testing.T) {
 		}},
 	}
 
-	if !reflect.DeepEqual(got, expected) {
-		t.Errorf("expected spec %+v, got %+v", expected, got)
-	}
+	require.Equal(t, expected, got)
 }
 
 func TestCreateSpecFromExistingApp(t *testing.T) {

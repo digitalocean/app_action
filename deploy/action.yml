@@ -42,6 +42,22 @@ outputs:
     description: The deploy logs of the deployment.
 
 runs:
-  using: docker
-  image: ../Dockerfile
-  args: ['deploy']
+  using: composite
+  steps:
+    - name: Cache
+      id: build-cache
+      uses: actions/cache@v4
+      with:
+        path: deploy
+        key: build-cache
+
+    - name: Build
+      if: steps.build-cache.outputs.cache-hit != 'true'
+      uses: docker
+      with:
+        path: deploy
+        image: ../Dockerfile
+
+    - name: Run
+      shell: bash
+      run: ./deploy

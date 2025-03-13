@@ -3,7 +3,7 @@ module github.com/digitalocean/app_action
 go 1.22.5
 
 require (
-	github.com/digitalocean/godo v1.138.0
+	github.com/digitalocean/godo v1.139.0
 	github.com/sethvargo/go-githubactions v1.3.0
 	github.com/stretchr/testify v1.10.0
 	sigs.k8s.io/yaml v1.4.0

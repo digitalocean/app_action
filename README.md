@@ -104,6 +104,7 @@ services:
     registry_type: GHCR
     registry: YOUR_ORG
     repository: YOUR_REPO
+    registry_credentials: ${GHCR_CREDENTIALS}
     digest: ${SAMPLE_DIGEST}
 ```
 
@@ -143,6 +144,7 @@ jobs:
         uses: digitalocean/app_action/deploy@v2
         env:
           SAMPLE_DIGEST: ${{ steps.push.outputs.digest }}
+          GHCR_CREDENTIALS: ${{ secrets.GHCR_CREDENTIALS }}
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 ```

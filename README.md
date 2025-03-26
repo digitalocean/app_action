@@ -104,10 +104,13 @@ services:
     registry_type: GHCR
     registry: YOUR_ORG
     repository: YOUR_REPO
+    registry_credentials: ${GHCR_CREDENTIALS}
     digest: ${SAMPLE_DIGEST}
 ```
 
 The following action builds a new image from a Dockerfile in the repository and deploys the respective app from it. The build in App Platform is automatically bypassed. The built image is deployed from its digest, avoiding any inconsistencies around mutable tags and guaranteeing that **exactly** this image is deployed.
+
+Similar to how we've passed the `SOME_SECRET_FROM_REPOSITORY` secret as an environment variable in the paragraph above, a secret of the repository, named for example `GHCR_CREDENTIALS` (which will have to be setup beforehand as well), can be passed to the app as [registry_credentials](https://docs.digitalocean.com/products/app-platform/how-to/deploy-from-container-images/#deploy-container-using-the-apps) to allow the deployment to pull the container image we're building, if the resulting image is private.
 
 ```yaml
 name: Build, Push and Deploy a Docker Image
@@ -143,6 +146,7 @@ jobs:
         uses: digitalocean/app_action/deploy@v2
         env:
           SAMPLE_DIGEST: ${{ steps.push.outputs.digest }}
+          GHCR_CREDENTIALS: ${{ secrets.GHCR_CREDENTIALS }}
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 ```

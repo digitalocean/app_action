@@ -59,7 +59,7 @@ services:
     type: SECRET
   github:
     branch: main
-    repo: digitalocean/sample-nodejs
+    repo: digitalocean/sample-golang
 ```
 
 The following action deploys the app whenever a new commit is pushed to the main branch. Note that `deploy_on_push` is **not** used here, since the Github Action is the driving force behind the deployment. Updates to `.do/app.yaml` will automatically be applied to the app.
@@ -161,7 +161,7 @@ services:
 - name: sample
   github:
     branch: main
-    repo: digitalocean/sample-nodejs
+    repo: digitalocean/sample-golang
 ```
 
 The following 2 actions implement a "Preview Apps" feature, that provide a per-PR app to check if the deployment **would** work. If the deployment succeeds, a comment is posted with the live URL of the app. If the deployment fails, a link to the respective action run is posted alongside the build and deployment logs for quick debugging.

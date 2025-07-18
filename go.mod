@@ -1,6 +1,6 @@
 module github.com/digitalocean/app_action
 
-go 1.23
+go 1.23.0
 
 require (
 	github.com/digitalocean/godo v1.156.0
@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	golang.org/x/oauth2 v0.23.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

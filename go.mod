@@ -6,7 +6,7 @@ require (
 	github.com/digitalocean/godo v1.156.0
 	github.com/sethvargo/go-githubactions v1.3.0
 	github.com/stretchr/testify v1.10.0
-	sigs.k8s.io/yaml v1.4.0
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
@@ -16,6 +16,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

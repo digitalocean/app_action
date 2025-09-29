@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/digitalocean/godo v1.165.0 h1:OG/E4/pUDCoySjKYeW1WKaON2airpWu7TdKwpZllz8I=
-github.com/digitalocean/godo v1.165.0/go.mod h1:NJ1VlXmFMSnG1GEe2rWyDZVrhR69c3nHmL0s1cSSQ6M=
+github.com/digitalocean/godo v1.165.1 h1:H37+W7TaGFOVH+HpMW4ZeW/hrq3AGNxg+B/K8/dZ9mQ=
+github.com/digitalocean/godo v1.165.1/go.mod h1:xQsWpVCCbkDrWisHA72hPzPlnC+4W5w/McZY5ij9uvU=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
 github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4NijnWvE=
 github.com/google/go-cmp v0.5.2/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=

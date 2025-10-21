@@ -32,6 +32,10 @@ inputs:
     description: Deploy the app as a PR preview. The app name will be derived from the PR, the app spec will be mangled to exclude conflicting configuration like domains and alerts and all Github references to the current repository will be updated to point to the PR's branch.
     required: false
     default: 'false'
+  wait_for_live_url:
+    description: Wait for the live URL to be active before finishing the action.
+    required: false
+    default: 'true'
 
 outputs:
   app:

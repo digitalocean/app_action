@@ -179,9 +179,11 @@ func (d *deployer) deploy(ctx context.Context, spec *godo.AppSpec) (*godo.App, e
 		return app, fmt.Errorf("deployment failed in phase %q", dep.Phase)
 	}
 
-	app, err = d.waitForAppLiveURL(ctx, app.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to wait for app to have a live URL: %w", err)
+	if d.inputs.waitForLiveUrl {
+		app, err = d.waitForAppLiveURL(ctx, app.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to wait for app to have a live URL: %w", err)
+		}
 	}
 
 	return app, nil

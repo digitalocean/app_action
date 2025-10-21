@@ -14,6 +14,7 @@ type inputs struct {
 	printBuildLogs  bool
 	printDeployLogs bool
 	deployPRPreview bool
+	waitForLiveUrl  bool
 }
 
 // getInputs gets the inputs for the action.
@@ -27,6 +28,7 @@ func getInputs(a *gha.Action) (inputs, error) {
 		utils.InputAsBool(a, "print_build_logs", true, &in.printBuildLogs),
 		utils.InputAsBool(a, "print_deploy_logs", true, &in.printDeployLogs),
 		utils.InputAsBool(a, "deploy_pr_preview", true, &in.deployPRPreview),
+		utils.InputAsBool(a, "wait_for_live_url", true, &in.waitForLiveUrl),
 	} {
 		if err != nil {
 			return in, err

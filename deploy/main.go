@@ -65,7 +65,11 @@ func main() {
 	if err != nil {
 		a.Fatalf("failed to deploy: %v", err)
 	}
-	a.Infof("App is now live under URL: %s", app.GetLiveURL())
+	if liveURL := app.GetLiveURL(); liveURL != "" {
+		a.Infof("App is now live under URL: %s", liveURL)
+	} else {
+		a.Infof("App deployed successfully (no live URL for this app)")
+	}
 }
 
 // deployer is responsible for deploying the app.
@@ -179,9 +183,17 @@ func (d *deployer) deploy(ctx context.Context, spec *godo.AppSpec) (*godo.App, e
 		return app, fmt.Errorf("deployment failed in phase %q", dep.Phase)
 	}
 
-	app, err = d.waitForAppLiveURL(ctx, app.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to wait for app to have a live URL: %w", err)
+	if specHasLiveURLComponents(spec) {
+		app, err = d.waitForAppLiveURL(ctx, app.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to wait for app to have a live URL: %w", err)
+		}
+	} else {
+		d.action.Infof("app does not contain any service, static site, or function components; skipping live URL check")
+		app, _, err = d.apps.Get(ctx, app.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get app: %w", err)
+		}
 	}
 
 	return app, nil
@@ -250,6 +262,15 @@ func (d *deployer) waitForAppLiveURL(ctx context.Context, appID string) (*godo.A
 		case <-t.C:
 		}
 	}
+}
+
+// specHasLiveURLComponents reports whether the given AppSpec contains any
+// component types that produce a publicly-accessible URL (services, static
+// sites, or functions). Worker-only or job-only apps never receive a live URL.
+func specHasLiveURLComponents(spec *godo.AppSpec) bool {
+	return len(spec.GetServices()) > 0 ||
+		len(spec.GetStaticSites()) > 0 ||
+		len(spec.GetFunctions()) > 0
 }
 
 // getLogs retrieves the logs from the given historic URLs.

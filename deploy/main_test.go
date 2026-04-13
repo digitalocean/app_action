@@ -185,6 +185,9 @@ func TestDeploy(t *testing.T) {
 	deploymentID := "deployment-id"
 	spec := &godo.AppSpec{
 		Name: "foo",
+		Services: []*godo.AppServiceSpec{{
+			Name: "web",
+		}},
 	}
 
 	tests := []struct {
@@ -466,42 +469,274 @@ deployment is in phase: ACTIVE
 `),
 	}}
 
+	newNoLiveURLAppService := func() *mockedAppsService {
+		as := &mockedAppsService{}
+		as.On("List", ctx, mock.Anything).Return([]*godo.App{}, &godo.Response{}, nil)
+		as.On("Create", ctx, mock.Anything).Return(&godo.App{ID: appID}, &godo.Response{}, nil)
+		as.On("ListDeployments", ctx, appID, mock.Anything).Return([]*godo.Deployment{{
+			ID: deploymentID,
+		}}, &godo.Response{}, nil)
+		as.On("GetDeployment", ctx, appID, deploymentID).Return(&godo.Deployment{
+			Phase: godo.DeploymentPhase_Active,
+		}, &godo.Response{}, nil)
+		as.On("GetLogs", ctx, appID, deploymentID, "", godo.AppLogTypeBuild, true, -1).Return(&godo.AppLogs{
+			HistoricURLs: []string{"http://build.com"},
+		}, &godo.Response{Response: &http.Response{StatusCode: http.StatusBadRequest}}, errors.New("an error"))
+		as.On("GetLogs", ctx, appID, deploymentID, "", godo.AppLogTypeDeploy, true, -1).Return(&godo.AppLogs{
+			HistoricURLs: []string{"http://deploy.com"},
+		}, &godo.Response{Response: &http.Response{StatusCode: http.StatusBadRequest}}, errors.New("an error"))
+		as.On("Get", ctx, appID).Return(&godo.App{ID: appID}, &godo.Response{}, nil)
+		return as
+	}
+
+	noLiveURLExpectedLogs := []byte(`app "foo" does not exist yet, creating...
+wait for deployment to finish
+deployment is in phase: ACTIVE
+app does not contain any service, static site, or function components; skipping live URL check
+`)
+
+	noLiveURLSpecs := []struct {
+		name string
+		spec *godo.AppSpec
+	}{
+		{
+			name: "worker-only",
+			spec: &godo.AppSpec{
+				Name:    "foo",
+				Workers: []*godo.AppWorkerSpec{{Name: "worker"}},
+			},
+		},
+		{
+			name: "job-only",
+			spec: &godo.AppSpec{
+				Name: "foo",
+				Jobs: []*godo.AppJobSpec{{Name: "myjob"}},
+			},
+		},
+		{
+			name: "database-only",
+			spec: &godo.AppSpec{
+				Name:      "foo",
+				Databases: []*godo.AppDatabaseSpec{{Name: "mydb"}},
+			},
+		},
+		{
+			name: "worker+database",
+			spec: &godo.AppSpec{
+				Name:      "foo",
+				Workers:   []*godo.AppWorkerSpec{{Name: "worker"}},
+				Databases: []*godo.AppDatabaseSpec{{Name: "db"}},
+			},
+		},
+		{
+			name: "worker+job+database",
+			spec: &godo.AppSpec{
+				Name:      "foo",
+				Workers:   []*godo.AppWorkerSpec{{Name: "worker"}},
+				Jobs:      []*godo.AppJobSpec{{Name: "myjob"}},
+				Databases: []*godo.AppDatabaseSpec{{Name: "db"}},
+			},
+		},
+	}
+
+	noLiveURLTests := []struct {
+		name           string
+		appService     *mockedAppsService
+		logsRT         *mockedRoundtripper
+		inputs         inputs
+		expectedLogs   []byte
+		expectedOutput []byte
+		err            bool
+	}{{
+		name:         "skips live URL check",
+		appService:   newNoLiveURLAppService(),
+		expectedLogs: noLiveURLExpectedLogs,
+	}}
+
+	runTests := func(t *testing.T, testSpec *godo.AppSpec, tests []struct {
+		name           string
+		appService     *mockedAppsService
+		logsRT         *mockedRoundtripper
+		inputs         inputs
+		expectedLogs   []byte
+		expectedOutput []byte
+		err            bool
+	}) {
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				var actionLogs bytes.Buffer
+				outputFilePath := t.TempDir() + "/output"
+				d := &deployer{
+					action: gha.New(gha.WithWriter(&actionLogs), gha.WithGetenv(func(k string) string {
+						switch k {
+						case "GITHUB_OUTPUT":
+							return outputFilePath
+						default:
+							return ""
+						}
+					})),
+					apps:       test.appService,
+					httpClient: &http.Client{Transport: test.logsRT},
+					inputs:     test.inputs,
+				}
+				_, err := d.deploy(ctx, testSpec)
+				if err != nil && !test.err {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if err == nil && test.err {
+					t.Fatalf("expected an error")
+				}
+
+				require.Equal(t, test.expectedLogs, actionLogs.Bytes())
+
+				output, err := os.ReadFile(outputFilePath)
+				if test.expectedOutput == nil {
+					require.ErrorIs(t, err, os.ErrNotExist)
+				} else {
+					require.NoError(t, err)
+					require.Equal(t, test.expectedOutput, output)
+				}
+
+				test.appService.AssertExpectations(t)
+			})
+		}
+	}
+
+	runTests(t, spec, tests)
+	for _, s := range noLiveURLSpecs {
+		t.Run(s.name, func(t *testing.T) {
+			noLiveURLTests[0].appService = newNoLiveURLAppService()
+			runTests(t, s.spec, noLiveURLTests)
+		})
+	}
+}
+
+func TestSpecHasLiveURLComponents(t *testing.T) {
+	tests := []struct {
+		name     string
+		spec     *godo.AppSpec
+		expected bool
+	}{
+		{
+			name: "service only",
+			spec: &godo.AppSpec{
+				Name:     "svc",
+				Services: []*godo.AppServiceSpec{{Name: "web"}},
+			},
+			expected: true,
+		},
+		{
+			name: "static site only",
+			spec: &godo.AppSpec{
+				Name:        "static",
+				StaticSites: []*godo.AppStaticSiteSpec{{Name: "site"}},
+			},
+			expected: true,
+		},
+		{
+			name: "function only",
+			spec: &godo.AppSpec{
+				Name:      "fn",
+				Functions: []*godo.AppFunctionsSpec{{Name: "func"}},
+			},
+			expected: true,
+		},
+		{
+			name: "worker only",
+			spec: &godo.AppSpec{
+				Name:    "wrk",
+				Workers: []*godo.AppWorkerSpec{{Name: "worker"}},
+			},
+			expected: false,
+		},
+		{
+			name: "job only",
+			spec: &godo.AppSpec{
+				Name: "job",
+				Jobs: []*godo.AppJobSpec{{Name: "myjob"}},
+			},
+			expected: false,
+		},
+		{
+			name: "database only",
+			spec: &godo.AppSpec{
+				Name:      "db",
+				Databases: []*godo.AppDatabaseSpec{{Name: "mydb"}},
+			},
+			expected: false,
+		},
+		{
+			name: "worker + database",
+			spec: &godo.AppSpec{
+				Name:      "wrk-db",
+				Workers:   []*godo.AppWorkerSpec{{Name: "worker"}},
+				Databases: []*godo.AppDatabaseSpec{{Name: "db"}},
+			},
+			expected: false,
+		},
+		{
+			name: "worker + job",
+			spec: &godo.AppSpec{
+				Name:    "wrk-job",
+				Workers: []*godo.AppWorkerSpec{{Name: "worker"}},
+				Jobs:    []*godo.AppJobSpec{{Name: "myjob"}},
+			},
+			expected: false,
+		},
+		{
+			name: "job + database",
+			spec: &godo.AppSpec{
+				Name:      "job-db",
+				Jobs:      []*godo.AppJobSpec{{Name: "myjob"}},
+				Databases: []*godo.AppDatabaseSpec{{Name: "db"}},
+			},
+			expected: false,
+		},
+		{
+			name: "worker + job + database",
+			spec: &godo.AppSpec{
+				Name:      "wrk-job-db",
+				Workers:   []*godo.AppWorkerSpec{{Name: "worker"}},
+				Jobs:      []*godo.AppJobSpec{{Name: "myjob"}},
+				Databases: []*godo.AppDatabaseSpec{{Name: "db"}},
+			},
+			expected: false,
+		},
+		{
+			name: "service + worker + database",
+			spec: &godo.AppSpec{
+				Name:      "svc-wrk-db",
+				Services:  []*godo.AppServiceSpec{{Name: "web"}},
+				Workers:   []*godo.AppWorkerSpec{{Name: "worker"}},
+				Databases: []*godo.AppDatabaseSpec{{Name: "db"}},
+			},
+			expected: true,
+		},
+		{
+			name: "static site + worker",
+			spec: &godo.AppSpec{
+				Name:        "static-wrk",
+				StaticSites: []*godo.AppStaticSiteSpec{{Name: "site"}},
+				Workers:     []*godo.AppWorkerSpec{{Name: "worker"}},
+			},
+			expected: true,
+		},
+		{
+			name: "function + job + database",
+			spec: &godo.AppSpec{
+				Name:      "fn-job-db",
+				Functions: []*godo.AppFunctionsSpec{{Name: "func"}},
+				Jobs:      []*godo.AppJobSpec{{Name: "myjob"}},
+				Databases: []*godo.AppDatabaseSpec{{Name: "db"}},
+			},
+			expected: true,
+		},
+	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var actionLogs bytes.Buffer
-			outputFilePath := t.TempDir() + "/output"
-			d := &deployer{
-				action: gha.New(gha.WithWriter(&actionLogs), gha.WithGetenv(func(k string) string {
-					switch k {
-					case "GITHUB_OUTPUT":
-						return outputFilePath
-					default:
-						return ""
-					}
-				})),
-				apps:       test.appService,
-				httpClient: &http.Client{Transport: test.logsRT},
-				inputs:     test.inputs,
-			}
-			_, err := d.deploy(ctx, spec)
-			if err != nil && !test.err {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			if err == nil && test.err {
-				t.Fatalf("expected an error")
-			}
-
-			require.Equal(t, test.expectedLogs, actionLogs.Bytes())
-
-			output, err := os.ReadFile(outputFilePath)
-			if test.expectedOutput == nil {
-				require.ErrorIs(t, err, os.ErrNotExist)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, test.expectedOutput, output)
-			}
-
-			test.appService.AssertExpectations(t)
+			got := specHasLiveURLComponents(test.spec)
+			require.Equal(t, test.expected, got)
 		})
 	}
 }

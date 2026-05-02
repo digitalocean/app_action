@@ -8,10 +8,12 @@ import (
 
 // appWideVariables are the environment variables that are shared across all components.
 // See https://docs.digitalocean.com/products/app-platform/how-to/use-environment-variables/#app-wide-variables.
+// See https://docs.digitalocean.com/products/app-platform/how-to/manage-domains/#use-subdomain-routing.
 var appWideVariables = map[string]struct{}{
-	"APP_DOMAIN": {},
-	"APP_URL":    {},
-	"APP_ID":   {},
+	"APP_DOMAIN":     {},
+	"APP_URL":        {},
+	"APP_ID":         {},
+	"STARTER_DOMAIN": {},
 }
 
 // ExpandEnvRetainingBindables expands the environment variables in s, but it
